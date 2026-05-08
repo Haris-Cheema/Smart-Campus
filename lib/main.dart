@@ -1,5 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_campus/firebase_options.dart';
 import 'package:smart_campus/providers/announcement_provider.dart';
 import 'package:smart_campus/providers/auth_provider.dart';
 import 'package:smart_campus/providers/chat_provider.dart';
@@ -13,8 +15,11 @@ import 'package:smart_campus/screens/register_screen.dart';
 import 'package:smart_campus/screens/weather_screen.dart';
 import 'package:smart_campus/theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const SmartCampusApp());
 }
 
@@ -78,7 +83,7 @@ class SmartCampusApp extends StatelessWidget {
                 case '/building':
                   return MaterialPageRoute(
                     builder: (_) => const BuildingDetailScreen(),
-                    settings: settings, // arguments passed via settings
+                    settings: settings,
                   );
                 default:
                   return MaterialPageRoute(

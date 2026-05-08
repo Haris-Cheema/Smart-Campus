@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_campus/models/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
   UserModel? _currentUser;
   bool _isLoading = false;
   String? _error;
@@ -15,27 +18,54 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoggedIn => _isLoggedIn;
 
   AuthProvider() {
-    _loadSession();
+    _checkAuthState();
   }
 
-  // Load saved session from SharedPreferences
-  Future<void> _loadSession() async {
+  // Listen to Firebase auth state changes
+  void _checkAuthState() {
     _isLoading = true;
     notifyListeners();
 
+    _firebaseAuth.authStateChanges().listen((User? user) async {
+      if (user != null) {
+        // User is signed in — load or create user model
+        await _loadOrCreateUserModel(user);
+        _isLoggedIn = true;
+      } else {
+        _currentUser = null;
+        _isLoggedIn = false;
+      }
+      _isLoading = false;
+      notifyListeners();
+    });
+  }
+
+  // Build user model from Firebase user + saved preferences
+  Future<void> _loadOrCreateUserModel(User firebaseUser) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final userData = prefs.getString('user_data');
-      if (userData != null) {
-        _currentUser = UserModel.fromJson(json.decode(userData));
-        _isLoggedIn = true;
-      }
-    } catch (e) {
-      _error = 'Failed to load session';
-    }
+      final savedData = prefs.getString('user_data');
 
-    _isLoading = false;
-    notifyListeners();
+      if (savedData != null) {
+        _currentUser = UserModel.fromJson(json.decode(savedData));
+        // Ensure email stays in sync
+        _currentUser = _currentUser!.copyWith(
+          id: firebaseUser.uid,
+          email: firebaseUser.email ?? _currentUser!.email,
+        );
+      } else {
+        _currentUser = UserModel(
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName ?? firebaseUser.email?.split('@').first ?? 'Student',
+          email: firebaseUser.email ?? '',
+          studentId: '19-NTU-CS-0000',
+          department: 'Computer Science',
+        );
+      }
+      await _saveSession(_currentUser!);
+    } catch (e) {
+      _error = 'Failed to load user data';
+    }
   }
 
   // Save session to SharedPreferences
@@ -79,39 +109,35 @@ class AuthProvider extends ChangeNotifier {
     return null;
   }
 
-  // Login
+  // ─── LOGIN with Firebase ─────────────────────────────────────────
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (email.isEmpty || password.isEmpty) {
-        _error = 'Please fill in all fields';
-        _isLoading = false;
-        notifyListeners();
-        return false;
-      }
-
-      // Simulated authentication — in production this would call a real API
-      final user = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: email.split('@').first.replaceAll('.', ' '),
-        email: email,
-        studentId: '19-NTU-CS-1122',
-        department: 'Computer Science',
+      final credential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
       );
 
-      _currentUser = user;
-      _isLoggedIn = true;
-      await _saveSession(user);
+      if (credential.user != null) {
+        await _loadOrCreateUserModel(credential.user!);
+        _isLoggedIn = true;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
 
+      _error = 'Login failed — no user returned';
       _isLoading = false;
       notifyListeners();
-      return true;
+      return false;
+    } on FirebaseAuthException catch (e) {
+      _error = _firebaseErrorMessage(e.code);
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _error = 'Login failed: $e';
       _isLoading = false;
@@ -120,7 +146,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Register
+  // ─── REGISTER with Firebase ──────────────────────────────────────
   Future<bool> register({
     required String name,
     required String email,
@@ -133,24 +159,41 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-
-      final user = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: name,
-        email: email,
-        studentId: studentId,
-        department: department,
+      final credential = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
       );
 
-      _currentUser = user;
-      _isLoggedIn = true;
-      await _saveSession(user);
+      if (credential.user != null) {
+        // Update display name
+        await credential.user!.updateDisplayName(name);
 
+        // Create user model
+        _currentUser = UserModel(
+          id: credential.user!.uid,
+          name: name,
+          email: email,
+          studentId: studentId,
+          department: department,
+        );
+
+        _isLoggedIn = true;
+        await _saveSession(_currentUser!);
+
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _error = 'Registration failed — no user returned';
       _isLoading = false;
       notifyListeners();
-      return true;
+      return false;
+    } on FirebaseAuthException catch (e) {
+      _error = _firebaseErrorMessage(e.code);
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _error = 'Registration failed: $e';
       _isLoading = false;
@@ -159,7 +202,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Update profile
+  // ─── UPDATE PROFILE ──────────────────────────────────────────────
   Future<bool> updateProfile({
     String? name,
     String? department,
@@ -171,7 +214,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Update Firebase display name if name changed
+      if (name != null && _firebaseAuth.currentUser != null) {
+        await _firebaseAuth.currentUser!.updateDisplayName(name);
+      }
 
       _currentUser = _currentUser!.copyWith(
         name: name,
@@ -191,10 +237,16 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Logout
+  // ─── LOGOUT ──────────────────────────────────────────────────────
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();
+
+    try {
+      await _firebaseAuth.signOut();
+    } catch (e) {
+      // Continue even if sign out fails
+    }
 
     await _clearSession();
     _currentUser = null;
@@ -208,5 +260,29 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // ─── User-friendly error messages ────────────────────────────────
+  String _firebaseErrorMessage(String code) {
+    switch (code) {
+      case 'user-not-found':
+        return 'No account found with this email. Please register first.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'invalid-credential':
+        return 'Invalid email or password. Please check and try again.';
+      case 'email-already-in-use':
+        return 'This email is already registered. Please login instead.';
+      case 'weak-password':
+        return 'Password is too weak. Use at least 6 characters.';
+      case 'invalid-email':
+        return 'Invalid email address format.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'Network error. Check your internet connection.';
+      default:
+        return 'Authentication error: $code';
+    }
   }
 }
