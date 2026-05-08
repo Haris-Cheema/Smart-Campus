@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_campus/providers/chat_provider.dart';
 
 class AssistantScreen extends StatefulWidget {
   const AssistantScreen({super.key});
@@ -7,54 +9,30 @@ class AssistantScreen extends StatefulWidget {
   State<AssistantScreen> createState() => _AssistantScreenState();
 }
 
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  ChatMessage(this.text, this.isUser);
-}
-
 class _AssistantScreenState extends State<AssistantScreen> {
   final TextEditingController _controller = TextEditingController();
-  final List<ChatMessage> _messages = [
-    ChatMessage("👋 Hey, how can I help you navigate the campus?", false)
-  ];
   final ScrollController _scrollController = ScrollController();
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _sendMessage() {
-    if (_controller.text.trim().isEmpty) return;
-
-    final text = _controller.text;
-    setState(() {
-      _messages.add(ChatMessage(text, true));
-    });
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
     _controller.clear();
-
+    context.read<ChatProvider>().sendMessage(text);
     _scrollToBottom();
-
-    // Mock bot response
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
-      String response = "I'm not sure how to answer that. Please try asking something else.";
-      final lower = text.toLowerCase();
-      if (lower.contains("hi") || lower.contains("hello") || lower.contains("hey")) {
-        response = "Hello! Need help finding a building?";
-      } else if (lower.contains("library") || lower.contains("book")) {
-        response = "The library is located near the Department of Textile Technology. I can show you the route on the Map tab!";
-      } else if (lower.contains("weather")) {
-        response = "You can check the current campus weather on the Home tab.";
-      }
-      setState(() {
-        _messages.add(ChatMessage(response, false));
-      });
-      _scrollToBottom();
-    });
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
+          _scrollController.position.maxScrollExtent + 100,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -65,48 +43,120 @@ class _AssistantScreenState extends State<AssistantScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final chat = context.watch<ChatProvider>();
+
+    // Auto-scroll when new messages arrive
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+
     return SafeArea(
       child: Column(
         children: [
+          // Header
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                  child: const Text("🤖", style: TextStyle(fontSize: 24)),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Text('🤖', style: TextStyle(fontSize: 24)),
                 ),
-                const SizedBox(width: 16),
-                Text("NTU NavBot", style: theme.textTheme.displayMedium),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('NTU NavBot', style: theme.textTheme.displaySmall),
+                      Text(chat.isTyping ? 'Typing...' : 'Online', style: theme.textTheme.labelSmall),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Clear Chat'),
+                        content: const Text('Are you sure you want to clear all messages?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                          TextButton(
+                            onPressed: () {
+                              context.read<ChatProvider>().clearChat();
+                              Navigator.pop(ctx);
+                            },
+                            child: const Text('Clear'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
-          const Divider(),
+          const Divider(height: 1),
+
+          // Messages
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
+              itemCount: chat.messages.length + (chat.isTyping ? 1 : 0),
               itemBuilder: (context, index) {
-                final msg = _messages[index];
+                if (index == chat.messages.length && chat.isTyping) {
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(20).copyWith(bottomLeft: Radius.zero),
+                      ),
+                      child: const SizedBox(
+                        width: 40,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _TypingDot(delay: 0),
+                            _TypingDot(delay: 200),
+                            _TypingDot(delay: 400),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                final msg = chat.messages[index];
                 return Align(
                   alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
                     decoration: BoxDecoration(
-                      color: msg.isUser ? theme.colorScheme.primary : theme.colorScheme.surfaceVariant,
+                      color: msg.isUser ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(20).copyWith(
-                        bottomRight: msg.isUser ? const Radius.circular(0) : const Radius.circular(20),
-                        bottomLeft: msg.isUser ? const Radius.circular(20) : const Radius.circular(0),
+                        bottomRight: msg.isUser ? Radius.zero : const Radius.circular(20),
+                        bottomLeft: msg.isUser ? const Radius.circular(20) : Radius.zero,
                       ),
                     ),
                     child: Text(
                       msg.text,
                       style: TextStyle(
                         color: msg.isUser ? Colors.white : theme.colorScheme.onSurface,
-                        fontSize: 16,
+                        fontSize: 15,
+                        height: 1.4,
                       ),
                     ),
                   ),
@@ -114,13 +164,13 @@ class _AssistantScreenState extends State<AssistantScreen> {
               },
             ),
           ),
+
+          // Input bar
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5)),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -4))],
             ),
             child: Row(
               children: [
@@ -128,28 +178,70 @@ class _AssistantScreenState extends State<AssistantScreen> {
                   child: TextField(
                     controller: _controller,
                     onSubmitted: (_) => _sendMessage(),
+                    textInputAction: TextInputAction.send,
                     decoration: InputDecoration(
-                      hintText: "Type a message...",
-                      filled: true,
-                      fillColor: theme.colorScheme.background,
+                      hintText: 'Ask about campus...',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                InkWell(
-                  onTap: _sendMessage,
-                  child: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: theme.colorScheme.primary,
-                    child: const Icon(Icons.send, color: Colors.white, size: 20),
-                  ),
+                const SizedBox(width: 8),
+                FloatingActionButton.small(
+                  onPressed: _sendMessage,
+                  child: const Icon(Icons.send_rounded, size: 20),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Animated typing dot
+class _TypingDot extends StatefulWidget {
+  final int delay;
+  const _TypingDot({required this.delay});
+
+  @override
+  State<_TypingDot> createState() => _TypingDotState();
+}
+
+class _TypingDotState extends State<_TypingDot> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _animation = Tween(begin: 0.0, end: 1.0).animate(_ctrl);
+    Future.delayed(Duration(milliseconds: widget.delay), () {
+      if (mounted) _ctrl.repeat(reverse: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (_, _) => Container(
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.4 + _animation.value * 0.6),
+          shape: BoxShape.circle,
+        ),
       ),
     );
   }

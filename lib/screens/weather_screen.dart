@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_campus/providers/weather_provider.dart';
+import 'package:smart_campus/services/weather_service.dart';
 
 class WeatherScreen extends StatelessWidget {
   const WeatherScreen({super.key});
@@ -6,100 +10,106 @@ class WeatherScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final weather = context.watch<WeatherProvider>();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Campus Weather'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    const Icon(Icons.wb_sunny, color: Colors.orange, size: 80),
-                    const SizedBox(height: 16),
-                    Text('28°C', style: theme.textTheme.displayLarge?.copyWith(fontSize: 48)),
-                    Text('Sunny', style: theme.textTheme.displayMedium),
-                    const SizedBox(height: 24),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _WeatherDetail(icon: Icons.water_drop, label: 'Humidity', value: '45%'),
-                        _WeatherDetail(icon: Icons.air, label: 'Wind', value: '12 km/h'),
-                        _WeatherDetail(icon: Icons.compress, label: 'Pressure', value: '1012 hPa'),
-                      ],
-                    ),
-                  ],
+      appBar: AppBar(title: const Text('Campus Weather')),
+      body: weather.isLoading && weather.weatherData == null
+          ? const Center(child: CircularProgressIndicator())
+          : weather.error != null && weather.weatherData == null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cloud_off, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      Text('Failed to load weather', style: theme.textTheme.bodyLarge),
+                      const SizedBox(height: 8),
+                      Text(weather.error!, style: theme.textTheme.bodyMedium),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => weather.fetchWeather(),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: () => weather.fetchWeather(),
+                  child: ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      // Current Weather
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            children: [
+                              Text(weather.weatherIcon, style: const TextStyle(fontSize: 72)),
+                              const SizedBox(height: 12),
+                              Text(
+                                '${weather.currentTemp.round()}°C',
+                                style: theme.textTheme.displayLarge?.copyWith(fontSize: 52),
+                              ),
+                              Text(weather.weatherDescription, style: theme.textTheme.displaySmall),
+                              const SizedBox(height: 8),
+                              Text('NTU Faisalabad', style: theme.textTheme.bodyMedium),
+                              const SizedBox(height: 24),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  _WeatherStat(icon: Icons.water_drop, value: '${weather.humidity.round()}%', label: 'Humidity'),
+                                  _WeatherStat(icon: Icons.air, value: '${weather.windSpeed.round()} km/h', label: 'Wind'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Forecast
+                      Text('5-Day Forecast', style: theme.textTheme.displaySmall),
+                      const SizedBox(height: 12),
+                      ...weather.forecast.map((day) {
+                        final date = DateTime.tryParse(day['date'] ?? '');
+                        final dayName = date != null ? DateFormat('EEEE').format(date) : '';
+                        final code = (day['weatherCode'] as num?)?.toInt() ?? 0;
+                        final maxTemp = (day['maxTemp'] as num?)?.round() ?? 0;
+                        final minTemp = (day['minTemp'] as num?)?.round() ?? 0;
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            leading: Text(WeatherService.weatherIcon(code), style: const TextStyle(fontSize: 28)),
+                            title: Text(dayName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                            subtitle: Text(WeatherService.weatherDescription(code)),
+                            trailing: Text('$maxTemp° / $minTemp°', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text('Forecast', style: theme.textTheme.displaySmall),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView(
-                children: const [
-                  _ForecastRow(day: 'Monday', temp: '29°C', icon: Icons.wb_sunny, color: Colors.orange),
-                  _ForecastRow(day: 'Tuesday', temp: '27°C', icon: Icons.cloud, color: Colors.grey),
-                  _ForecastRow(day: 'Wednesday', temp: '25°C', icon: Icons.water_drop, color: Colors.blue),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
 
-class _WeatherDetail extends StatelessWidget {
+class _WeatherStat extends StatelessWidget {
   final IconData icon;
-  final String label;
   final String value;
-
-  const _WeatherDetail({required this.icon, required this.label, required this.value});
+  final String label;
+  const _WeatherStat({required this.icon, required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: Colors.blue),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
         const SizedBox(height: 8),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
       ],
-    );
-  }
-}
-
-class _ForecastRow extends StatelessWidget {
-  final String day;
-  final String temp;
-  final IconData icon;
-  final Color color;
-
-  const _ForecastRow({required this.day, required this.temp, required this.icon, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(day, style: const TextStyle(fontSize: 16)),
-          Row(
-            children: [
-              Icon(icon, color: color),
-              const SizedBox(width: 16),
-              Text(temp, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_campus/providers/navigation_provider.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({super.key});
@@ -10,140 +12,175 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
-  final Map<String, LatLng> buildings = {
-    "Parking": const LatLng(31.460817, 73.147092),
-    "Play Ground": const LatLng(31.461333, 73.148057),
-    "NTU Admission office": const LatLng(31.461562, 73.148298),
-    "library": const LatLng(31.461816, 73.147634),
-    "Department of textile Technology": const LatLng(31.461902, 73.147973),
-    "University Auditorium": const LatLng(31.461933, 73.148319),
-    "Rector office": const LatLng(31.461987, 73.148704),
-    "CECA": const LatLng(31.462070, 73.148299),
-    "Weaving Lab": const LatLng(31.462256, 73.147691),
-    "Weaving Department": const LatLng(31.462093, 73.147740),
-    "Garments": const LatLng(31.462274, 73.147793),
-    "Mechanical lab": const LatLng(31.462218, 73.147487),
-    "Knitting Department": const LatLng(31.462134, 73.147075),
-    "Polymer Engineers": const LatLng(31.462325, 73.146999),
-    "School of Engineering and Technology": const LatLng(31.462685, 73.147575),
-    "IT Center": const LatLng(31.462808, 73.148879),
-    "School of Arts and Design": const LatLng(31.463034, 73.149252),
-    "student advisor office": const LatLng(31.462306, 73.148804),
-    "Dispensary": const LatLng(31.462926, 73.149671),
-    "Cricket ground": const LatLng(31.463531, 73.148670),
-    "Girls Hostel": const LatLng(31.464066, 73.150130),
-    "Masjid": const LatLng(31.463238, 73.147542),
-    "Faisalabad business school (FBS)": const LatLng(31.462664, 73.149382),
-    "New Boys Hostel": const LatLng(31.463223, 73.146757),
-    "Old Boys Hostel": const LatLng(31.464183, 73.146086),
-    "Hockey Ground": const LatLng(31.461641, 73.149417),
-    "Cafeteria": const LatLng(31.462919, 73.148074),
-    "Open Gym": const LatLng(31.463379, 73.147318),
-  };
-
-  String? _startLocation;
-  String? _endLocation;
-  final LatLng _campusCenter = const LatLng(31.462140, 73.148536);
   final MapController _mapController = MapController();
-  List<LatLng> _routePoints = [];
-
-  void _calculateRoute() {
-    if (_startLocation != null && _endLocation != null && _startLocation != _endLocation) {
-      setState(() {
-        _routePoints = [
-          buildings[_startLocation]!,
-          buildings[_endLocation]!,
-        ];
-      });
-      // Zoom to fit bounds
-      final bounds = LatLngBounds.fromPoints(_routePoints);
-      _mapController.fitCamera(CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(50)));
-    } else if (_startLocation == _endLocation && _startLocation != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Start and Destination cannot be the same!')),
-      );
-    }
-  }
+  final LatLng _campusCenter = const LatLng(31.4621, 73.1485);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final nav = context.watch<NavigationProvider>();
+
     return SafeArea(
       child: Column(
         children: [
+          // Route Selection Card
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Start Location', prefixIcon: Icon(Icons.my_location)),
-                      value: _startLocation,
-                      items: buildings.keys.map((String key) {
-                        return DropdownMenuItem<String>(value: key, child: Text(key, style: const TextStyle(fontSize: 14)));
-                      }).toList(),
-                      onChanged: (value) => setState(() => _startLocation = value),
-                    ),
+                    Text('Find Your Route', style: theme.textTheme.displaySmall),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(labelText: 'Destination', prefixIcon: Icon(Icons.location_on)),
-                      value: _endLocation,
-                      items: buildings.keys.map((String key) {
-                        return DropdownMenuItem<String>(value: key, child: Text(key, style: const TextStyle(fontSize: 14)));
+                      decoration: const InputDecoration(
+                        labelText: 'Start Location',
+                        prefixIcon: Icon(Icons.my_location, color: Colors.green),
+                        isDense: true,
+                      ),
+                      isExpanded: true,
+                      value: nav.startLocation,
+                      items: nav.buildingNames.map((name) {
+                        return DropdownMenuItem(value: name, child: Text(name, style: const TextStyle(fontSize: 13)));
                       }).toList(),
-                      onChanged: (value) => setState(() => _endLocation = value),
+                      onChanged: (val) => nav.setStart(val),
                     ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: _calculateRoute,
-                      icon: const Icon(Icons.directions_walk),
-                      label: const Text('Find Route'),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Destination',
+                        prefixIcon: Icon(Icons.location_on, color: Colors.red),
+                        isDense: true,
+                      ),
+                      isExpanded: true,
+                      value: nav.endLocation,
+                      items: nav.buildingNames.map((name) {
+                        return DropdownMenuItem(value: name, child: Text(name, style: const TextStyle(fontSize: 13)));
+                      }).toList(),
+                      onChanged: (val) => nav.setEnd(val),
                     ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              final error = nav.calculateRoute();
+                              if (error != null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(error), backgroundColor: theme.colorScheme.error),
+                                );
+                              } else if (nav.routePoints.isNotEmpty) {
+                                final bounds = LatLngBounds.fromPoints(nav.routePoints);
+                                _mapController.fitCamera(
+                                  CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(60)),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.directions_walk, size: 18),
+                            label: const Text('Find Route'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () => nav.clearRoute(),
+                          icon: const Icon(Icons.clear),
+                          tooltip: 'Clear Route',
+                          style: IconButton.styleFrom(
+                            backgroundColor: theme.colorScheme.errorContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Distance info
+                    if (nav.distance != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _InfoChip(icon: Icons.straighten, label: '${nav.distance!.toStringAsFixed(0)} m'),
+                              _InfoChip(icon: Icons.timer, label: '${nav.estimatedTimeMinutes!.toStringAsFixed(1)} min'),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
           ),
+
+          // Category filter chips
+          SizedBox(
+            height: 44,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: nav.categories.map((cat) {
+                final isSelected = nav.selectedCategory == cat || (nav.selectedCategory == null && cat == 'all');
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(cat[0].toUpperCase() + cat.substring(1)),
+                    selected: isSelected,
+                    onSelected: (_) => nav.setCategory(cat),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Map
           Expanded(
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               child: FlutterMap(
                 mapController: _mapController,
-                options: MapOptions(
-                  initialCenter: _campusCenter,
-                  initialZoom: 17.0,
-                ),
+                options: MapOptions(initialCenter: _campusCenter, initialZoom: 17.0),
                 children: [
                   TileLayer(
                     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.example.smart_campus',
                   ),
-                  PolylineLayer(
-                    polylines: [
-                      if (_routePoints.isNotEmpty)
+                  if (nav.routePoints.isNotEmpty)
+                    PolylineLayer(
+                      polylines: [
                         Polyline(
-                          points: _routePoints,
-                          strokeWidth: 5.0,
+                          points: nav.routePoints,
+                          strokeWidth: 5,
                           color: theme.colorScheme.primary,
                         ),
-                    ],
-                  ),
+                      ],
+                    ),
                   MarkerLayer(
-                    markers: buildings.entries.map((entry) {
-                      Color markerColor = Colors.blue;
-                      if (entry.key == _startLocation) markerColor = Colors.green;
-                      if (entry.key == _endLocation) markerColor = Colors.red;
-
+                    markers: nav.filteredBuildings.map((building) {
+                      Color color = Colors.blue;
+                      double size = 28;
+                      if (building.name == nav.startLocation) {
+                        color = Colors.green;
+                        size = 40;
+                      }
+                      if (building.name == nav.endLocation) {
+                        color = Colors.red;
+                        size = 40;
+                      }
                       return Marker(
-                        point: entry.value,
-                        width: 40,
-                        height: 40,
-                        child: Icon(
-                          Icons.location_on,
-                          color: markerColor,
-                          size: (entry.key == _startLocation || entry.key == _endLocation) ? 40 : 24,
+                        point: building.location,
+                        width: size,
+                        height: size,
+                        child: GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/building', arguments: building.name),
+                          child: Icon(Icons.location_on, color: color, size: size),
                         ),
                       );
                     }).toList(),
@@ -154,6 +191,24 @@ class _NavigationScreenState extends State<NavigationScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _InfoChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ],
     );
   }
 }

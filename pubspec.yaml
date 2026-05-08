@@ -7,12 +7,18 @@ environment:
   sdk: ^3.11.1
 
 dependencies:
+  cloud_firestore: ^6.3.0
+  firebase_auth: ^6.4.0
+  firebase_core: ^4.7.0
   flutter:
     sdk: flutter
   flutter_map: ^8.3.0
   google_fonts: ^8.1.0
   http: ^1.6.0
+  intl: ^0.20.2
   latlong2: ^0.9.1
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
 
 dev_dependencies:

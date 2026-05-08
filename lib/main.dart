@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_campus/providers/announcement_provider.dart';
+import 'package:smart_campus/providers/auth_provider.dart';
+import 'package:smart_campus/providers/chat_provider.dart';
+import 'package:smart_campus/providers/navigation_provider.dart';
+import 'package:smart_campus/providers/weather_provider.dart';
+import 'package:smart_campus/screens/announcements_screen.dart';
+import 'package:smart_campus/screens/building_detail_screen.dart';
+import 'package:smart_campus/screens/dashboard_screen.dart';
 import 'package:smart_campus/screens/login_screen.dart';
+import 'package:smart_campus/screens/register_screen.dart';
+import 'package:smart_campus/screens/weather_screen.dart';
 import 'package:smart_campus/theme/app_theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const SmartCampusApp());
 }
 
@@ -11,11 +23,73 @@ class SmartCampusApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Smart Campus Assistant',
-      theme: AppTheme.lightTheme,
-      debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => WeatherProvider()),
+        ChangeNotifierProvider(create: (_) => NavigationProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
+      ],
+      child: Consumer<AuthProvider>(
+        builder: (context, auth, _) {
+          return MaterialApp(
+            title: 'Smart Campus Assistant',
+            theme: AppTheme.lightTheme,
+            debugShowCheckedModeBanner: false,
+
+            // Initial route based on auth state
+            initialRoute: '/login',
+            onGenerateRoute: (settings) {
+              // If logged in and trying to access login, redirect to dashboard
+              if (settings.name == '/login' && auth.isLoggedIn) {
+                return MaterialPageRoute(
+                  builder: (_) => const DashboardScreen(),
+                  settings: const RouteSettings(name: '/dashboard'),
+                );
+              }
+
+              switch (settings.name) {
+                case '/login':
+                  return MaterialPageRoute(
+                    builder: (_) => const LoginScreen(),
+                    settings: settings,
+                  );
+                case '/register':
+                  return MaterialPageRoute(
+                    builder: (_) => const RegisterScreen(),
+                    settings: settings,
+                  );
+                case '/dashboard':
+                  return MaterialPageRoute(
+                    builder: (_) => const DashboardScreen(),
+                    settings: settings,
+                  );
+                case '/weather':
+                  return MaterialPageRoute(
+                    builder: (_) => const WeatherScreen(),
+                    settings: settings,
+                  );
+                case '/announcements':
+                  return MaterialPageRoute(
+                    builder: (_) => const AnnouncementsScreen(),
+                    settings: settings,
+                  );
+                case '/building':
+                  return MaterialPageRoute(
+                    builder: (_) => const BuildingDetailScreen(),
+                    settings: settings, // arguments passed via settings
+                  );
+                default:
+                  return MaterialPageRoute(
+                    builder: (_) => const LoginScreen(),
+                    settings: settings,
+                  );
+              }
+            },
+          );
+        },
+      ),
     );
   }
 }
