@@ -179,6 +179,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: _handleRegister,
                     child: const Text('Create Account'),
                   ),
+                  const SizedBox(height: 20),
+
+                  // OR divider
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3))),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('OR', style: theme.textTheme.labelSmall),
+                      ),
+                      Expanded(child: Divider(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3))),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Google Sign-Up button
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final auth = context.read<AuthProvider>();
+                      final success = await auth.signInWithGoogle();
+                      if (!mounted) return;
+                      if (success) {
+                        Navigator.pushReplacementNamed(context, '/dashboard');
+                      } else if (auth.error != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(auth.error!),
+                            backgroundColor: theme.colorScheme.error,
+                          ),
+                        );
+                      }
+                    },
+                    icon: Image.network(
+                      'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                      height: 20,
+                      width: 20,
+                      errorBuilder: (_, _, _) => const Icon(Icons.g_mobiledata, size: 24),
+                    ),
+                    label: const Text('Sign up with Google'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
+                      foregroundColor: theme.colorScheme.onSurface,
+                      textStyle: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.w500),
+                    ),
+                  ),
                   const SizedBox(height: 16),
 
                   // Already have account

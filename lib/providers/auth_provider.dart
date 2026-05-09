@@ -1,16 +1,19 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_campus/models/user_model.dart';
 
 class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   UserModel? _currentUser;
   bool _isLoading = false;
   String? _error;
   bool _isLoggedIn = false;
+  bool _googleInitialized = false;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
@@ -19,6 +22,17 @@ class AuthProvider extends ChangeNotifier {
 
   AuthProvider() {
     _checkAuthState();
+  }
+
+  // Initialize Google Sign-In (must be called once)
+  Future<void> _ensureGoogleInitialized() async {
+    if (!_googleInitialized) {
+      await _googleSignIn.initialize(
+        clientId: '84042858582-psgrj7f0n9ipjl62dttq73bcrkunihih.apps.googleusercontent.com',
+        serverClientId: '84042858582-psgrj7f0n9ipjl62dttq73bcrkunihih.apps.googleusercontent.com',
+      );
+      _googleInitialized = true;
+    }
   }
 
   // Listen to Firebase auth state changes
@@ -202,6 +216,77 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // ─── GOOGLE SIGN-IN ──────────────────────────────────────────────
+  Future<bool> signInWithGoogle() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Initialize Google Sign-In if not already done
+      await _ensureGoogleInitialized();
+
+      // Trigger the interactive Google Sign-In flow
+      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+
+      // Get the authentication tokens (idToken)
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
+      // Create Firebase credential using the idToken
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with Google credential
+      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+
+      if (userCredential.user != null) {
+        // Create user model from Google profile
+        _currentUser = UserModel(
+          id: userCredential.user!.uid,
+          name: userCredential.user!.displayName ?? googleUser.displayName ?? 'Student',
+          email: userCredential.user!.email ?? googleUser.email,
+          studentId: '19-NTU-CS-0000',
+          department: 'Computer Science',
+          avatarUrl: userCredential.user!.photoURL ?? googleUser.photoUrl ?? '',
+        );
+
+        _isLoggedIn = true;
+        await _saveSession(_currentUser!);
+
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _error = 'Google Sign-In failed — no user returned';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        // User cancelled — not an error
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+      _error = 'Google Sign-In failed: ${e.code}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } on FirebaseAuthException catch (e) {
+      _error = _firebaseErrorMessage(e.code);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Google Sign-In failed: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   // ─── UPDATE PROFILE ──────────────────────────────────────────────
   Future<bool> updateProfile({
     String? name,
@@ -243,6 +328,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Sign out from Google
+      if (_googleInitialized) {
+        await _googleSignIn.disconnect();
+      }
       await _firebaseAuth.signOut();
     } catch (e) {
       // Continue even if sign out fails
