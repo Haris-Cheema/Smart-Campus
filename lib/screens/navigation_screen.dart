@@ -41,7 +41,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                         isDense: true,
                       ),
                       isExpanded: true,
-                      value: nav.startLocation,
+                      initialValue: nav.startLocation,
                       items: nav.buildingNames.map((name) {
                         return DropdownMenuItem(value: name, child: Text(name, style: const TextStyle(fontSize: 13)));
                       }).toList(),
@@ -55,7 +55,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                         isDense: true,
                       ),
                       isExpanded: true,
-                      value: nav.endLocation,
+                      initialValue: nav.endLocation,
                       items: nav.buildingNames.map((name) {
                         return DropdownMenuItem(value: name, child: Text(name, style: const TextStyle(fontSize: 13)));
                       }).toList(),

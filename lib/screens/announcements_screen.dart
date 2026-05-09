@@ -151,7 +151,7 @@ class AnnouncementsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: status,
+                    initialValue: status,
                     decoration: const InputDecoration(labelText: 'Status'),
                     items: const [
                       DropdownMenuItem(value: 'active', child: Text('Active')),
