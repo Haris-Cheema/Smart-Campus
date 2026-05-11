@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +11,8 @@ import 'package:smart_campus/models/user_model.dart';
 class AuthProvider extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   UserModel? _currentUser;
   bool _isLoading = false;
@@ -54,31 +59,73 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  // Build user model from Firebase user + saved preferences
+  // Build user model from Firestore (Ground Truth) or Local Prefs
   Future<void> _loadOrCreateUserModel(User firebaseUser) async {
     try {
+      // 1. Load Local Data first (Immediate fallback)
       final prefs = await SharedPreferences.getInstance();
       final savedData = prefs.getString('user_data');
-
       if (savedData != null) {
-        _currentUser = UserModel.fromJson(json.decode(savedData));
-        // Ensure email stays in sync
-        _currentUser = _currentUser!.copyWith(
-          id: firebaseUser.uid,
-          email: firebaseUser.email ?? _currentUser!.email,
-        );
-      } else {
-        _currentUser = UserModel(
+        final localUser = UserModel.fromJson(json.decode(savedData));
+        if (localUser.id == firebaseUser.uid) {
+          _currentUser = localUser;
+          notifyListeners();
+        }
+      }
+
+      // 2. Attempt to sync with Firestore
+      try {
+        final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
+
+        if (doc.exists) {
+          _currentUser = UserModel.fromJson(doc.data()!);
+          
+          // Get best available photo from providers
+          String? bestPhotoURL = firebaseUser.photoURL;
+          if (bestPhotoURL == null || bestPhotoURL.isEmpty) {
+            for (final profile in firebaseUser.providerData) {
+              if (profile.photoURL != null && profile.photoURL!.isNotEmpty) {
+                bestPhotoURL = profile.photoURL;
+                break;
+              }
+            }
+          }
+
+          if ((_currentUser!.avatarUrl == null || _currentUser!.avatarUrl.isEmpty) && 
+              (bestPhotoURL != null && bestPhotoURL.isNotEmpty)) {
+            _currentUser = _currentUser!.copyWith(avatarUrl: bestPhotoURL);
+            await _firestore.collection('users').doc(firebaseUser.uid).set(_currentUser!.toJson(), SetOptions(merge: true));
+          }
+        } else if (_currentUser == null) {
+          // No local data and no Firestore doc — create new
+          _currentUser = UserModel(
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName ?? firebaseUser.email?.split('@').first ?? 'Student',
+            email: firebaseUser.email ?? '',
+            studentId: '19-NTU-CS-0000',
+            department: 'Computer Science',
+            avatarUrl: firebaseUser.photoURL ?? '',
+          );
+          await _firestore.collection('users').doc(firebaseUser.uid).set(_currentUser!.toJson());
+        }
+      } catch (firestoreError) {
+        debugPrint('Firestore Sync Warning: $firestoreError. Using local data fallback.');
+        // If firestore fails but we still don't have a user, create a minimal local one
+        _currentUser ??= UserModel(
           id: firebaseUser.uid,
           name: firebaseUser.displayName ?? firebaseUser.email?.split('@').first ?? 'Student',
           email: firebaseUser.email ?? '',
           studentId: '19-NTU-CS-0000',
           department: 'Computer Science',
+          avatarUrl: firebaseUser.photoURL ?? '',
         );
       }
+
       await _saveSession(_currentUser!);
+      notifyListeners();
     } catch (e) {
-      _error = 'Failed to load user data';
+      debugPrint('Critical Load user error: $e');
+      _error = 'Failed to load profile. Please check Firebase Console.';
     }
   }
 
@@ -179,7 +226,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (credential.user != null) {
-        // Update display name
+        // Update Firebase Auth profile
         await credential.user!.updateDisplayName(name);
 
         // Create user model
@@ -190,6 +237,9 @@ class AuthProvider extends ChangeNotifier {
           studentId: studentId,
           department: department,
         );
+
+        // Save to Firestore
+        await _firestore.collection('users').doc(_currentUser!.id).set(_currentUser!.toJson());
 
         _isLoggedIn = true;
         await _saveSession(_currentUser!);
@@ -223,49 +273,26 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Initialize Google Sign-In if not already done
       await _ensureGoogleInitialized();
-
-      // Trigger the interactive Google Sign-In flow
       final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
-
-      // Get the authentication tokens (idToken)
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-
-      // Create Firebase credential using the idToken
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
-
-      // Sign in to Firebase with Google credential
+      final credential = GoogleAuthProvider.credential(idToken: googleAuth.idToken);
       final userCredential = await _firebaseAuth.signInWithCredential(credential);
 
       if (userCredential.user != null) {
-        // Create user model from Google profile
-        _currentUser = UserModel(
-          id: userCredential.user!.uid,
-          name: userCredential.user!.displayName ?? googleUser.displayName ?? 'Student',
-          email: userCredential.user!.email ?? googleUser.email,
-          studentId: '19-NTU-CS-0000',
-          department: 'Computer Science',
-          avatarUrl: userCredential.user!.photoURL ?? googleUser.photoUrl ?? '',
-        );
-
+        await _loadOrCreateUserModel(userCredential.user!);
         _isLoggedIn = true;
-        await _saveSession(_currentUser!);
-
         _isLoading = false;
         notifyListeners();
         return true;
       }
 
-      _error = 'Google Sign-In failed — no user returned';
+      _error = 'Google Sign-In failed';
       _isLoading = false;
       notifyListeners();
       return false;
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        // User cancelled — not an error
         _isLoading = false;
         notifyListeners();
         return false;
@@ -292,30 +319,80 @@ class AuthProvider extends ChangeNotifier {
     String? name,
     String? department,
     String? studentId,
+    String? avatarUrl,
   }) async {
-    if (_currentUser == null) return false;
+    if (_currentUser == null) {
+      _error = 'No user logged in';
+      notifyListeners();
+      return false;
+    }
 
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Update Firebase display name if name changed
-      if (name != null && _firebaseAuth.currentUser != null) {
-        await _firebaseAuth.currentUser!.updateDisplayName(name);
+      String? finalAvatarUrl = avatarUrl;
+
+      // 1. Image Handling (Skip Storage upload if on Free Plan without Storage enabled)
+      if (avatarUrl != null && !avatarUrl.startsWith('http')) {
+        try {
+          final File file = File(avatarUrl);
+          if (await file.exists()) {
+            // Attempt upload but fallback to local path if it fails
+            try {
+              final String fileName = '${_currentUser!.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+              final Reference ref = _storage.ref().child('avatars').child(fileName);
+              await ref.putFile(file);
+              finalAvatarUrl = await ref.getDownloadURL();
+            } catch (storageError) {
+              debugPrint('Storage disabled or failed: $storageError. Using local path instead.');
+              // Keep finalAvatarUrl as the local path (avatarUrl)
+              finalAvatarUrl = avatarUrl;
+            }
+          }
+        } catch (e) {
+          debugPrint('Image access error: $e');
+        }
       }
 
+      // 2. Update Firebase Auth profile (Best effort)
+      try {
+        if (name != null) await _firebaseAuth.currentUser?.updateDisplayName(name);
+        if (finalAvatarUrl != null && finalAvatarUrl.startsWith('http')) {
+          await _firebaseAuth.currentUser?.updatePhotoURL(finalAvatarUrl);
+        }
+      } catch (e) {
+        debugPrint('Auth Sync Warning: $e');
+      }
+
+      // 3. Update User Model
       _currentUser = _currentUser!.copyWith(
         name: name,
         department: department,
         studentId: studentId,
+        avatarUrl: finalAvatarUrl,
       );
+
+      // 4. Save to Firestore (Ground Truth)
+      try {
+        await _firestore
+            .collection('users')
+            .doc(_currentUser!.id)
+            .set(_currentUser!.toJson(), SetOptions(merge: true));
+      } catch (firestoreError) {
+        debugPrint('Firestore Sync Failed: $firestoreError');
+        // We continue because local session will still work
+      }
+
+      // 5. Save local session (This ensures it works on this device)
       await _saveSession(_currentUser!);
 
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = 'Update failed: $e';
+      debugPrint('Update Profile Error: $e');
+      _error = 'Failed to update profile locally';
       _isLoading = false;
       notifyListeners();
       return false;
@@ -328,14 +405,9 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Sign out from Google
-      if (_googleInitialized) {
-        await _googleSignIn.disconnect();
-      }
+      if (_googleInitialized) await _googleSignIn.disconnect();
       await _firebaseAuth.signOut();
-    } catch (e) {
-      // Continue even if sign out fails
-    }
+    } catch (e) {}
 
     await _clearSession();
     _currentUser = null;
@@ -346,32 +418,19 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearError() {
-    _error = null;
-    notifyListeners();
-  }
+  void clearError() => { _error = null, notifyListeners() };
 
-  // ─── User-friendly error messages ────────────────────────────────
   String _firebaseErrorMessage(String code) {
     switch (code) {
-      case 'user-not-found':
-        return 'No account found with this email. Please register first.';
-      case 'wrong-password':
-        return 'Incorrect password. Please try again.';
-      case 'invalid-credential':
-        return 'Invalid email or password. Please check and try again.';
-      case 'email-already-in-use':
-        return 'This email is already registered. Please login instead.';
-      case 'weak-password':
-        return 'Password is too weak. Use at least 6 characters.';
-      case 'invalid-email':
-        return 'Invalid email address format.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
-      case 'network-request-failed':
-        return 'Network error. Check your internet connection.';
-      default:
-        return 'Authentication error: $code';
+      case 'user-not-found': return 'No account found with this email.';
+      case 'wrong-password': return 'Incorrect password.';
+      case 'invalid-credential': return 'Invalid email or password.';
+      case 'email-already-in-use': return 'This email is already registered.';
+      case 'weak-password': return 'Password is too weak.';
+      case 'invalid-email': return 'Invalid email format.';
+      case 'too-many-requests': return 'Too many attempts. Try later.';
+      case 'network-request-failed': return 'Network error.';
+      default: return 'Authentication error: $code';
     }
   }
 }

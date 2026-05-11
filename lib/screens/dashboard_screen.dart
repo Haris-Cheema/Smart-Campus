@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_campus/providers/announcement_provider.dart';
@@ -97,7 +98,14 @@ class _HomeTab extends StatelessWidget {
                   child: CircleAvatar(
                     radius: 24,
                     backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    child: Icon(Icons.person, color: theme.colorScheme.primary),
+                    backgroundImage: auth.currentUser?.avatarUrl != null && auth.currentUser!.avatarUrl.isNotEmpty
+                        ? (auth.currentUser!.avatarUrl.startsWith('http')
+                            ? NetworkImage(auth.currentUser!.avatarUrl)
+                            : FileImage(File(auth.currentUser!.avatarUrl)) as ImageProvider)
+                        : null,
+                    child: auth.currentUser?.avatarUrl == null || auth.currentUser!.avatarUrl.isEmpty
+                        ? Icon(Icons.person, color: theme.colorScheme.primary)
+                        : null,
                   ),
                 ),
               ],
