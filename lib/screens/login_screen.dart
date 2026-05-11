@@ -98,6 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
                     validator: AuthProvider.validateEmail,
                     decoration: const InputDecoration(
                       labelText: 'Email Address',
@@ -111,6 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _handleLogin(),
                     validator: AuthProvider.validatePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',

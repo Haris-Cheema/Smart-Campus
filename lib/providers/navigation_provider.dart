@@ -186,6 +186,25 @@ class NavigationProvider extends ChangeNotifier {
       category: 'sports',
       description: 'Outdoor gym equipment area.',
     ),
+    BuildingModel(
+      name: "Main Gate",
+      location: const LatLng(31.461123, 73.148778),
+      category: 'other',
+      description:
+          'The primary entrance and security checkpoint of the campus.',
+    ),
+    BuildingModel(
+      name: "Parking Gate",
+      location: const LatLng(31.460681, 73.146727),
+      category: 'other',
+      description: 'The entrance gate for parking of the campus.',
+    ),
+    BuildingModel(
+      name: "National Textile Research Labs",
+      location: const LatLng(31.460583, 73.148322),
+      category: 'academic',
+      description: 'National Textile Research Labs.',
+    ),
   ]..sort((a, b) => a.name.compareTo(b.name));
 
   String? _startLocation;

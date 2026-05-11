@@ -232,7 +232,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                       // Zoom map (Mouse Wheel)
                       final zoomDelta = delta.dy > 0 ? -0.5 : 0.5;
                       final newZoom = (_mapController.camera.zoom + zoomDelta)
-                          .clamp(1.0, 19.0);
+                          .clamp(16.0, 22.0);
                       _mapController.move(
                         _mapController.camera.center,
                         newZoom,
@@ -260,6 +260,14 @@ class _NavigationScreenState extends State<NavigationScreen> {
                     options: MapOptions(
                       initialCenter: _campusCenter,
                       initialZoom: 17.0,
+                      minZoom: 16.0,
+                      maxZoom: 22.0,
+                      cameraConstraint: CameraConstraint.containCenter(
+                        bounds: LatLngBounds(
+                          const LatLng(31.4600, 73.1460), // SouthWest Campus Edge
+                          const LatLng(31.4645, 73.1505), // NorthEast Campus Edge
+                        ),
+                      ),
                       interactionOptions: const InteractionOptions(
                         flags:
                             InteractiveFlag.all &
@@ -271,6 +279,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                         urlTemplate:
                             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.example.smart_campus',
+                        maxNativeZoom: 19, // OpenStreetMap tiles only go to 19, but flutter_map will scale them up
                       ),
                       if (nav.routePoints.isNotEmpty)
                         PolylineLayer(
@@ -282,36 +291,75 @@ class _NavigationScreenState extends State<NavigationScreen> {
                             ),
                           ],
                         ),
-                      MarkerLayer(
-                        markers: nav.filteredBuildings.map((building) {
-                          Color color = Colors.blue;
-                          double size = 28;
-                          if (building.name == nav.startLocation) {
-                            color = Colors.green;
-                            size = 40;
-                          }
-                          if (building.name == nav.endLocation) {
-                            color = Colors.red;
-                            size = 40;
-                          }
-                          return Marker(
-                            point: building.location,
-                            width: size,
-                            height: size,
-                            child: GestureDetector(
-                              onTap: () => Navigator.pushNamed(
-                                context,
-                                '/building',
-                                arguments: building.name,
-                              ),
-                              child: Icon(
-                                Icons.location_on,
-                                color: color,
-                                size: size,
-                              ),
-                            ),
+                      Builder(
+                        builder: (context) {
+                          final currentZoom = MapCamera.of(context).zoom;
+                          return MarkerLayer(
+                            markers: nav.filteredBuildings.map((building) {
+                              Color color = Colors.blue;
+                              double size = 28;
+                              if (building.name == nav.startLocation) {
+                                color = Colors.green;
+                                size = 40;
+                              }
+                              if (building.name == nav.endLocation) {
+                                color = Colors.red;
+                                size = 40;
+                              }
+                              return Marker(
+                                point: building.location,
+                                width: 120,
+                                height: 80,
+                                child: GestureDetector(
+                                  onTap: () => Navigator.pushNamed(
+                                    context,
+                                    '/building',
+                                    arguments: building.name,
+                                  ),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Icon(
+                                        Icons.location_on,
+                                        color: color,
+                                        size: size,
+                                      ),
+                                      if (currentZoom >= 17.5)
+                                        Positioned(
+                                          bottom: 40 + (size / 2) - 10, // Center is 40, push up by half icon size
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withValues(alpha: 0.9),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.1),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 2),
+                                                )
+                                              ],
+                                            ),
+                                            child: Text(
+                                              building.name,
+                                              style: const TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black87,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                           );
-                        }).toList(),
+                        }
                       ),
                     ],
                   ),
@@ -324,6 +372,16 @@ class _NavigationScreenState extends State<NavigationScreen> {
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          FloatingActionButton(
+            heroTag: 'resetView',
+            mini: true,
+            onPressed: () {
+              // Reset to campus center and default zoom (1 level inside the 16.0 limit)
+              _mapController.move(_campusCenter, 17.0);
+            },
+            child: const Icon(Icons.center_focus_strong),
+          ),
+          const SizedBox(height: 8),
           FloatingActionButton(
             heroTag: 'zoomIn',
             mini: true,
