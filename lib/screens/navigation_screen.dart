@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:smart_campus/providers/navigation_provider.dart';
 
 class NavigationScreen extends StatefulWidget {
@@ -15,6 +18,19 @@ class NavigationScreen extends StatefulWidget {
 class _NavigationScreenState extends State<NavigationScreen> {
   final MapController _mapController = MapController();
   final LatLng _campusCenter = const LatLng(31.4621, 73.1485);
+
+  @override
+  void initState() {
+    super.initState();
+    _requestLocationPermission();
+  }
+
+  Future<void> _requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -281,6 +297,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                         userAgentPackageName: 'com.example.smart_campus',
                         maxNativeZoom: 19, // OpenStreetMap tiles only go to 19, but flutter_map will scale them up
                       ),
+                      if (!kIsWeb) CurrentLocationLayer(),
                       if (nav.routePoints.isNotEmpty)
                         PolylineLayer(
                           polylines: [
