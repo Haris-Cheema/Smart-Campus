@@ -173,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
+                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
                       foregroundColor: theme.colorScheme.onSurface,
                       textStyle: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.w500),
                     ),

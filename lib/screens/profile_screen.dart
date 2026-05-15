@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_campus/providers/auth_provider.dart';
+import 'package:smart_campus/providers/theme_provider.dart';
 import 'package:smart_campus/widgets/loading_overlay.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -198,15 +199,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2), width: 2),
+                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 2),
                     ),
                     child: InkWell(
                       onTap: _showEditDialog,
                       customBorder: const CircleBorder(),
                       child: CircleAvatar(
                         radius: 60,
-                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      backgroundImage: user?.avatarUrl != null && user!.avatarUrl.isNotEmpty
+                        backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                        backgroundImage: user?.avatarUrl != null && user!.avatarUrl.isNotEmpty
                           ? (user.avatarUrl.startsWith('http')
                               ? NetworkImage(user.avatarUrl)
                               : FileImage(File(user.avatarUrl)) as ImageProvider)
@@ -309,6 +310,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 40),
 
             _ProfileTile(icon: Icons.edit, title: 'Edit Profile', onTap: _showEditDialog),
+            Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    context.watch<ThemeProvider>().isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                title: Text('Dark Mode', style: theme.textTheme.bodyLarge),
+                value: context.watch<ThemeProvider>().isDarkMode,
+                onChanged: (_) => context.read<ThemeProvider>().toggleTheme(),
+              ),
+            ),
             _ProfileTile(icon: Icons.campaign, title: 'Announcements', onTap: () => Navigator.pushNamed(context, '/announcements')),
             _ProfileTile(icon: Icons.wb_sunny, title: 'Weather', onTap: () => Navigator.pushNamed(context, '/weather')),
             _ProfileTile(icon: Icons.info_outline, title: 'About App', onTap: () {

@@ -13,6 +13,7 @@ import 'package:smart_campus/screens/dashboard_screen.dart';
 import 'package:smart_campus/screens/login_screen.dart';
 import 'package:smart_campus/screens/register_screen.dart';
 import 'package:smart_campus/screens/weather_screen.dart';
+import 'package:smart_campus/providers/theme_provider.dart';
 import 'package:smart_campus/theme/app_theme.dart';
 
 void main() async {
@@ -28,21 +29,24 @@ class SmartCampusApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
       ],
-      child: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
+      child: Consumer2<AuthProvider, ThemeProvider>(
+        builder: (context, auth, themeProvider, _) {
           return MaterialApp(
             title: 'Smart Campus Assistant',
             theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
             debugShowCheckedModeBanner: false,
 
             // Initial route based on auth state
-            initialRoute: '/login',
+            initialRoute: auth.isLoggedIn ? '/dashboard' : '/login',
             onGenerateRoute: (settings) {
               // If logged in and trying to access login, redirect to dashboard
               if (settings.name == '/login' && auth.isLoggedIn) {
