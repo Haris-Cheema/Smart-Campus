@@ -54,7 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       department: _selectedDepartment,
     );
 
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     if (success) {
       Navigator.pushReplacementNamed(context, '/dashboard');
@@ -199,7 +199,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: () async {
                       final auth = context.read<AuthProvider>();
                       final success = await auth.signInWithGoogle();
-                      if (!mounted) return;
+                      if (!context.mounted) return;
                       if (success) {
                         Navigator.pushReplacementNamed(context, '/dashboard');
                       } else if (auth.error != null) {
@@ -221,7 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
+                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
                       foregroundColor: theme.colorScheme.onSurface,
                       textStyle: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.w500),
                     ),

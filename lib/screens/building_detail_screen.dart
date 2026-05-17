@@ -35,8 +35,12 @@ class BuildingDetailScreen extends StatelessWidget {
               ),
               children: [
                 TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  urlTemplate: theme.brightness == Brightness.dark
+                      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                      : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: const ['a', 'b', 'c', 'd'],
                   userAgentPackageName: 'com.example.smart_campus',
+                  keepBuffer: 3,
                 ),
                 MarkerLayer(
                   markers: [
@@ -62,7 +66,7 @@ class BuildingDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _categoryColor(building.category!).withOpacity(0.1),
+                      color: _categoryColor(building.category!).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: Text(

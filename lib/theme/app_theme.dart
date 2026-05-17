@@ -41,7 +41,6 @@ class AppTheme {
       surface: isDark ? const Color(0xFF111318) : surface,
       onSurface: isDark ? const Color(0xFFE2E2EB) : onSurface,
       surfaceContainerHighest: isDark ? const Color(0xFF30343D) : surfaceContainerHighest,
-      background: isDark ? const Color(0xFF0D0E11) : background,
     );
 
     return ThemeData(

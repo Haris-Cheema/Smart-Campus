@@ -199,14 +199,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 2),
+                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2), width: 2),
                     ),
                     child: InkWell(
                       onTap: _showEditDialog,
                       customBorder: const CircleBorder(),
                       child: CircleAvatar(
                         radius: 60,
-                        backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
                         backgroundImage: user?.avatarUrl != null && user!.avatarUrl.isNotEmpty
                           ? (user.avatarUrl.startsWith('http')
                               ? NetworkImage(user.avatarUrl)

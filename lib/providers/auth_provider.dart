@@ -407,7 +407,9 @@ class AuthProvider extends ChangeNotifier {
     try {
       if (_googleInitialized) await _googleSignIn.disconnect();
       await _firebaseAuth.signOut();
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Logout warning: $e');
+    }
 
     await _clearSession();
     _currentUser = null;

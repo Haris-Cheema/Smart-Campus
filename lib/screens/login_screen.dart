@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _passwordController.text,
     );
 
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     if (success) {
       Navigator.pushReplacementNamed(context, '/dashboard');
@@ -91,11 +91,11 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
 
-    if (result == true && mounted) {
+    if (result == true && context.mounted) {
       final auth = context.read<AuthProvider>();
       final success = await auth.resetPassword(emailCtrl.text.trim());
       
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(success ? 'Password reset email sent! Check your inbox.' : (auth.error ?? 'Failed to send reset email')),
@@ -226,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () async {
                       final auth = context.read<AuthProvider>();
                       final success = await auth.signInWithGoogle();
-                      if (!mounted) return;
+                      if (!context.mounted) return;
                       if (success) {
                         Navigator.pushReplacementNamed(context, '/dashboard');
                       } else if (auth.error != null) {
@@ -248,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
+                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
                       foregroundColor: theme.colorScheme.onSurface,
                       textStyle: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.w500),
                     ),

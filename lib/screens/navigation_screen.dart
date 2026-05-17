@@ -30,6 +30,29 @@ class _NavigationScreenState extends State<NavigationScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
+    
+    if (permission == LocationPermission.deniedForever && mounted) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Location Permission'),
+          content: const Text('Location permissions are permanently denied. We cannot request permissions. Please enable them in your app settings to use GPS tracking.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Geolocator.openAppSettings();
+              },
+              child: const Text('Open Settings'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -298,6 +321,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                         subdomains: const ['a', 'b', 'c', 'd'],
                         userAgentPackageName: 'com.example.smart_campus',
                         maxNativeZoom: 19,
+                        keepBuffer: 3,
                       ),
                       if (!kIsWeb) CurrentLocationLayer(),
                       if (nav.routePoints.isNotEmpty)
@@ -350,12 +374,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: theme.colorScheme.surface.withOpacity(0.9),
+                                              color: theme.colorScheme.surface.withValues(alpha: 0.9),
                                               borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
+                                              border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withOpacity(0.1),
+                                                  color: Colors.black.withValues(alpha: 0.1),
                                                   blurRadius: 4,
                                                   offset: const Offset(0, 2),
                                                 )
