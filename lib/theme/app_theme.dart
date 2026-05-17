@@ -14,44 +14,50 @@ class AppTheme {
   static const Color error = Color(0xFFBA1A1A);
   static const Color errorContainer = Color(0xFFFFDAD6);
 
-  static ThemeData get lightTheme {
+  static ThemeData get lightTheme => _themeData(Brightness.light);
+  static ThemeData get darkTheme => _themeData(Brightness.dark);
+
+  static ThemeData _themeData(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
     final lexend = GoogleFonts.lexendTextTheme();
+
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: primary,
+      brightness: brightness,
+      primary: primary,
+      onPrimary: Colors.white,
+      secondary: secondary,
+      onSecondary: Colors.white,
+      surface: isDark ? const Color(0xFF111318) : surface,
+      onSurface: isDark ? const Color(0xFFE2E2EB) : onSurface,
+      surfaceContainerHighest: isDark ? const Color(0xFF30343D) : surfaceContainerHighest,
+      background: isDark ? const Color(0xFF0D0E11) : background,
+    );
 
     return ThemeData(
       useMaterial3: true,
-      colorScheme: const ColorScheme.light(
-        primary: primary,
-        secondary: secondary,
-        surface: surface,
-        error: error,
-        errorContainer: errorContainer,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
-        onSurface: onSurface,
-        onSurfaceVariant: onSurfaceVariant,
-        surfaceContainerHighest: surfaceContainerHighest,
-      ),
-      scaffoldBackgroundColor: background,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: colorScheme.surface,
 
       // Typography
       textTheme: lexend.copyWith(
-        displayLarge: GoogleFonts.lexend(fontSize: 28, fontWeight: FontWeight.w700, color: onSurface),
-        displayMedium: GoogleFonts.lexend(fontSize: 22, fontWeight: FontWeight.w600, color: onSurface),
-        displaySmall: GoogleFonts.lexend(fontSize: 18, fontWeight: FontWeight.w600, color: onSurface),
-        bodyLarge: GoogleFonts.lexend(fontSize: 16, fontWeight: FontWeight.w400, color: onSurface),
-        bodyMedium: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.w400, color: onSurfaceVariant),
-        labelLarge: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.w500, color: onSurface),
-        labelSmall: GoogleFonts.lexend(fontSize: 12, fontWeight: FontWeight.w500, color: onSurfaceVariant),
+        displayLarge: GoogleFonts.lexend(fontSize: 28, fontWeight: FontWeight.w700, color: colorScheme.onSurface),
+        displayMedium: GoogleFonts.lexend(fontSize: 22, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+        displaySmall: GoogleFonts.lexend(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+        bodyLarge: GoogleFonts.lexend(fontSize: 16, fontWeight: FontWeight.w400, color: colorScheme.onSurface),
+        bodyMedium: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.w400, color: colorScheme.onSurfaceVariant),
+        labelLarge: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.w500, color: colorScheme.onSurface),
+        labelSmall: GoogleFonts.lexend(fontSize: 12, fontWeight: FontWeight.w500, color: colorScheme.onSurfaceVariant),
       ),
 
       // AppBar
       appBarTheme: AppBarTheme(
-        backgroundColor: surface,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         scrolledUnderElevation: 1,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: primary),
-        titleTextStyle: GoogleFonts.lexend(color: onSurface, fontSize: 18, fontWeight: FontWeight.w600),
+        iconTheme: IconThemeData(color: isDark ? Colors.white : primary),
+        titleTextStyle: GoogleFonts.lexend(color: colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
       ),
 
       // Buttons
@@ -68,7 +74,7 @@ class AppTheme {
 
       // Cards
       cardTheme: CardThemeData(
-        color: surface,
+        color: isDark ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5) : surface,
         elevation: 0,
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -78,26 +84,26 @@ class AppTheme {
       // Input fields
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surfaceContainerHighest.withValues(alpha: 0.5),
+        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: isDark ? 0.3 : 0.5),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: primary, width: 2)),
         errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: error, width: 1)),
         focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: error, width: 2)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        labelStyle: GoogleFonts.lexend(color: onSurfaceVariant),
+        labelStyle: GoogleFonts.lexend(color: colorScheme.onSurfaceVariant),
       ),
 
       // Navigation bar
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: surface,
+        backgroundColor: colorScheme.surface,
         indicatorColor: primary.withValues(alpha: 0.12),
         labelTextStyle: WidgetStateProperty.all(GoogleFonts.lexend(fontSize: 12, fontWeight: FontWeight.w500)),
       ),
 
       // Chips
       chipTheme: ChipThemeData(
-        backgroundColor: surfaceContainer,
+        backgroundColor: colorScheme.surfaceContainerHighest,
         selectedColor: primary.withValues(alpha: 0.15),
         labelStyle: GoogleFonts.lexend(fontSize: 13),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
@@ -106,6 +112,7 @@ class AppTheme {
 
       // Dialogs
       dialogTheme: DialogThemeData(
+        backgroundColor: isDark ? colorScheme.surface : surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
 
@@ -123,7 +130,7 @@ class AppTheme {
       ),
 
       // Divider
-      dividerTheme: DividerThemeData(color: surfaceContainerHighest.withValues(alpha: 0.7)),
+      dividerTheme: DividerThemeData(color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7)),
     );
   }
 }

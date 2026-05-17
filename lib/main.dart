@@ -7,6 +7,7 @@ import 'package:smart_campus/providers/auth_provider.dart';
 import 'package:smart_campus/providers/chat_provider.dart';
 import 'package:smart_campus/providers/navigation_provider.dart';
 import 'package:smart_campus/providers/weather_provider.dart';
+import 'package:smart_campus/providers/theme_provider.dart';
 import 'package:smart_campus/screens/announcements_screen.dart';
 import 'package:smart_campus/screens/building_detail_screen.dart';
 import 'package:smart_campus/screens/dashboard_screen.dart';
@@ -31,16 +32,19 @@ class SmartCampusApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
       ],
-      child: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
+      child: Consumer2<AuthProvider, ThemeProvider>(
+        builder: (context, auth, themeProvider, _) {
           return MaterialApp(
             title: 'Smart Campus Assistant',
             theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
             debugShowCheckedModeBanner: false,
 
             // Initial route based on auth state

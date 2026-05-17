@@ -91,7 +91,7 @@ class AuthProvider extends ChangeNotifier {
             }
           }
 
-          if ((_currentUser!.avatarUrl == null || _currentUser!.avatarUrl.isEmpty) && 
+          if ((_currentUser!.avatarUrl.isEmpty) && 
               (bestPhotoURL != null && bestPhotoURL.isNotEmpty)) {
             _currentUser = _currentUser!.copyWith(avatarUrl: bestPhotoURL);
             await _firestore.collection('users').doc(firebaseUser.uid).set(_currentUser!.toJson(), SetOptions(merge: true));
