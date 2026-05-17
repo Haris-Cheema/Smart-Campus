@@ -199,15 +199,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2), width: 2),
+                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 2),
                     ),
                     child: InkWell(
                       onTap: _showEditDialog,
                       customBorder: const CircleBorder(),
                       child: CircleAvatar(
                         radius: 60,
-                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      backgroundImage: user?.avatarUrl != null && user!.avatarUrl.isNotEmpty
+                        backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                        backgroundImage: user?.avatarUrl != null && user!.avatarUrl.isNotEmpty
                           ? (user.avatarUrl.startsWith('http')
                               ? NetworkImage(user.avatarUrl)
                               : FileImage(File(user.avatarUrl)) as ImageProvider)
@@ -310,30 +310,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 40),
 
             _ProfileTile(icon: Icons.edit, title: 'Edit Profile', onTap: _showEditDialog),
-            
-            // Dark Mode Toggle
-            Consumer<ThemeProvider>(
-              builder: (context, themeProvider, _) => Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: SwitchListTile(
-                  secondary: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                      color: theme.colorScheme.primary,
-                    ),
+            Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: SwitchListTile(
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  title: Text('Dark Mode', style: theme.textTheme.bodyLarge),
-                  value: themeProvider.isDarkMode,
-                  onChanged: (val) => themeProvider.toggleTheme(),
+                  child: Icon(
+                    context.watch<ThemeProvider>().isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
+                title: Text('Dark Mode', style: theme.textTheme.bodyLarge),
+                value: context.watch<ThemeProvider>().isDarkMode,
+                onChanged: (_) => context.read<ThemeProvider>().toggleTheme(),
               ),
             ),
-
             _ProfileTile(icon: Icons.campaign, title: 'Announcements', onTap: () => Navigator.pushNamed(context, '/announcements')),
             _ProfileTile(icon: Icons.wb_sunny, title: 'Weather', onTap: () => Navigator.pushNamed(context, '/weather')),
             _ProfileTile(icon: Icons.info_outline, title: 'About App', onTap: () {

@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:smart_campus/providers/navigation_provider.dart';
 
 class NavigationScreen extends StatefulWidget {
@@ -15,6 +18,19 @@ class NavigationScreen extends StatefulWidget {
 class _NavigationScreenState extends State<NavigationScreen> {
   final MapController _mapController = MapController();
   final LatLng _campusCenter = const LatLng(31.4621, 73.1485);
+
+  @override
+  void initState() {
+    super.initState();
+    _requestLocationPermission();
+  }
+
+  Future<void> _requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -276,11 +292,14 @@ class _NavigationScreenState extends State<NavigationScreen> {
                     ),
                     children: [
                       TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        urlTemplate: theme.brightness == Brightness.dark
+                            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                            : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        subdomains: const ['a', 'b', 'c', 'd'],
                         userAgentPackageName: 'com.example.smart_campus',
-                        maxNativeZoom: 19, // OpenStreetMap tiles only go to 19, but flutter_map will scale them up
+                        maxNativeZoom: 19,
                       ),
+                      if (!kIsWeb) CurrentLocationLayer(),
                       if (nav.routePoints.isNotEmpty)
                         PolylineLayer(
                           polylines: [
@@ -327,16 +346,16 @@ class _NavigationScreenState extends State<NavigationScreen> {
                                       ),
                                       if (currentZoom >= 17.5)
                                         Positioned(
-                                          bottom: 40 + (size / 2) - 10, // Center is 40, push up by half icon size
+                                          bottom: 40 + (size / 2) - 10,
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withValues(alpha: 0.9),
+                                              color: theme.colorScheme.surface.withOpacity(0.9),
                                               borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                                              border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withValues(alpha: 0.1),
+                                                  color: Colors.black.withOpacity(0.1),
                                                   blurRadius: 4,
                                                   offset: const Offset(0, 2),
                                                 )
@@ -344,10 +363,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
                                             ),
                                             child: Text(
                                               building.name,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.black87,
+                                                color: theme.colorScheme.onSurface,
                                               ),
                                               textAlign: TextAlign.center,
                                             ),

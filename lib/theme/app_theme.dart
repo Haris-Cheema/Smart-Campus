@@ -14,6 +14,16 @@ class AppTheme {
   static const Color error = Color(0xFFBA1A1A);
   static const Color errorContainer = Color(0xFFFFDAD6);
 
+  // ── Dark Color Tokens ───────────────────────────────────────────
+  static const Color primaryDark = Color(0xFFADC6FF);
+  static const Color secondaryDark = Color(0xFF91CDFF);
+  static const Color surfaceDark = Color(0xFF111318);
+  static const Color backgroundDark = Color(0xFF111318);
+  static const Color surfaceContainerDark = Color(0xFF1E2025);
+  static const Color surfaceContainerHighestDark = Color(0xFF33353A);
+  static const Color onSurfaceDark = Color(0xFFE2E2E9);
+  static const Color onSurfaceVariantDark = Color(0xFFC4C6D0);
+
   static ThemeData get lightTheme => _themeData(Brightness.light);
   static ThemeData get darkTheme => _themeData(Brightness.dark);
 
@@ -84,7 +94,7 @@ class AppTheme {
       // Input fields
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: isDark ? 0.3 : 0.5),
+        fillColor: surfaceContainerHighest.withValues(alpha: 0.5),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: primary, width: 2)),
@@ -96,14 +106,14 @@ class AppTheme {
 
       // Navigation bar
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: surface,
         indicatorColor: primary.withValues(alpha: 0.12),
         labelTextStyle: WidgetStateProperty.all(GoogleFonts.lexend(fontSize: 12, fontWeight: FontWeight.w500)),
       ),
 
       // Chips
       chipTheme: ChipThemeData(
-        backgroundColor: colorScheme.surfaceContainerHighest,
+        backgroundColor: surfaceContainer,
         selectedColor: primary.withValues(alpha: 0.15),
         labelStyle: GoogleFonts.lexend(fontSize: 13),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
@@ -130,7 +140,7 @@ class AppTheme {
       ),
 
       // Divider
-      dividerTheme: DividerThemeData(color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.7)),
+      dividerTheme: DividerThemeData(color: surfaceContainerHighest.withValues(alpha: 0.7)),
     );
   }
 }

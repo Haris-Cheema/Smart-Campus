@@ -62,7 +62,7 @@ class BuildingDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _categoryColor(building.category!).withValues(alpha: 0.1),
+                      color: _categoryColor(building.category!).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: Text(

@@ -18,9 +18,7 @@ import 'package:smart_campus/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const SmartCampusApp());
 }
 
@@ -31,6 +29,7 @@ class SmartCampusApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
@@ -48,7 +47,7 @@ class SmartCampusApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
 
             // Initial route based on auth state
-            initialRoute: '/login',
+            initialRoute: auth.isLoggedIn ? '/dashboard' : '/login',
             onGenerateRoute: (settings) {
               // If logged in and trying to access login, redirect to dashboard
               if (settings.name == '/login' && auth.isLoggedIn) {

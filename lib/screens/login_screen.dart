@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _passwordController.text,
     );
 
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     if (success) {
       Navigator.pushReplacementNamed(context, '/dashboard');
@@ -44,6 +44,66 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
+    }
+  }
+
+  Future<void> _showForgotPasswordDialog() async {
+    final emailCtrl = TextEditingController(text: _emailController.text);
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Reset Password', style: GoogleFonts.lexend(fontWeight: FontWeight.w600)),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Enter your email address and we will send you a link to reset your password.'),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                validator: AuthProvider.validateEmail,
+                decoration: const InputDecoration(
+                  labelText: 'Email Address',
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.outline)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(ctx, true);
+              }
+            },
+            child: const Text('Send Link'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      final auth = context.read<AuthProvider>();
+      final success = await auth.resetPassword(emailCtrl.text.trim());
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success ? 'Password reset email sent! Check your inbox.' : (auth.error ?? 'Failed to send reset email')),
+            backgroundColor: success ? Colors.green : Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -124,7 +184,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  
+                  // Forgot Password Link
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _showForgotPasswordDialog,
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
                   // Sign In button
                   ElevatedButton(
@@ -173,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
+                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3)),
                       foregroundColor: theme.colorScheme.onSurface,
                       textStyle: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.w500),
                     ),

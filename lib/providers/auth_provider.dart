@@ -418,6 +418,48 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ─── FORGOT PASSWORD ─────────────────────────────────────────────
+  Future<bool> resetPassword(String email) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final String trimmedEmail = email.trim();
+
+      // 1. Check if the email exists in our Firestore database first
+      final snapshot = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: trimmedEmail)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        // Email not found in database
+        _error = 'No account found with this email.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      // 2. If it exists, send the reset email
+      await _firebaseAuth.sendPasswordResetEmail(email: trimmedEmail);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _error = _firebaseErrorMessage(e.code);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Failed to send reset email: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() => { _error = null, notifyListeners() };
 
   String _firebaseErrorMessage(String code) {

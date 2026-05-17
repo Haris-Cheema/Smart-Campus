@@ -14,6 +14,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_map: ^8.3.0
+  flutter_map_location_marker: ^10.2.0
+  geolocator: ^14.0.2
   google_fonts: ^8.1.0
   google_sign_in: ^7.2.0
   http: ^1.6.0

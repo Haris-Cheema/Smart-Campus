@@ -1,48 +1,52 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:smart_campus/models/announcement_model.dart';
 
 class AnnouncementProvider extends ChangeNotifier {
-  final List<AnnouncementModel> _announcements = [
-    AnnouncementModel(
-      id: '1',
-      title: 'Library Hours Extended',
-      description:
-          'Library hours have been extended for finals week. Now open until 10 PM on weekdays.',
-      status: 'active',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
-    AnnouncementModel(
-      id: '2',
-      title: 'Campus WiFi Maintenance',
-      description:
-          'WiFi will be down for maintenance on Saturday from 2 AM to 6 AM. Plan accordingly.',
-      status: 'urgent',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    AnnouncementModel(
-      id: '3',
-      title: 'Sports Week Registration',
-      description:
-          'Register for the annual NTU Sports Week! Events include cricket, football, badminton, and athletics. Last date to register is May 15.',
-      status: 'active',
-      createdAt: DateTime.now().subtract(const Duration(days: 3)),
-    ),
-    AnnouncementModel(
-      id: '4',
-      title: 'Parking Lot B Closed',
-      description:
-          'Parking Lot B is closed for resurfacing until next Monday. Use the main parking area instead.',
-      status: 'resolved',
-      createdAt: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-  ];
-
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<AnnouncementModel> _announcements = [];
   bool _isLoading = false;
   String? _error;
 
   List<AnnouncementModel> get announcements => List.unmodifiable(_announcements);
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  AnnouncementProvider() {
+    _fetchAnnouncements();
+  }
+
+  // READ all
+  Future<void> _fetchAnnouncements() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final snapshot = await _firestore
+          .collection('announcements')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      _announcements = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id; // ensure ID from firestore is used
+        return AnnouncementModel.fromJson(data);
+      }).toList();
+      _error = null;
+    } catch (e) {
+      debugPrint('Fetch announcements error: $e');
+      // On permission denied or not found, just use empty list (free plan fallback)
+      if (e.toString().contains('permission-denied') || e.toString().contains('unavailable')) {
+        _announcements = [];
+        _error = 'Could not load announcements from server. Showing local empty state.';
+      } else {
+        _error = 'Failed to load announcements: $e';
+      }
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
 
   // CREATE
   Future<void> addAnnouncement({
@@ -54,20 +58,21 @@ class AnnouncementProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-
+      final docRef = _firestore.collection('announcements').doc();
       final announcement = AnnouncementModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: docRef.id,
         title: title,
         description: description,
         status: status,
         createdAt: DateTime.now(),
       );
 
+      await docRef.set(announcement.toJson());
       _announcements.insert(0, announcement);
       _error = null;
     } catch (e) {
-      _error = 'Failed to add announcement: $e';
+      debugPrint('Add announcement error: $e');
+      _error = 'Failed to add announcement. Check your internet connection.';
     }
 
     _isLoading = false;
@@ -94,22 +99,25 @@ class AnnouncementProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-
       final index = _announcements.indexWhere((a) => a.id == id);
       if (index != -1) {
-        _announcements[index] = _announcements[index].copyWith(
+        final updatedAnnouncement = _announcements[index].copyWith(
           title: title,
           description: description,
           status: status,
           updatedAt: DateTime.now(),
         );
+
+        await _firestore.collection('announcements').doc(id).update(updatedAnnouncement.toJson());
+        
+        _announcements[index] = updatedAnnouncement;
         _error = null;
       } else {
         _error = 'Announcement not found';
       }
     } catch (e) {
-      _error = 'Failed to update announcement: $e';
+      debugPrint('Update announcement error: $e');
+      _error = 'Failed to update announcement.';
     }
 
     _isLoading = false;
@@ -122,11 +130,12 @@ class AnnouncementProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await _firestore.collection('announcements').doc(id).delete();
       _announcements.removeWhere((a) => a.id == id);
       _error = null;
     } catch (e) {
-      _error = 'Failed to delete announcement: $e';
+      debugPrint('Delete announcement error: $e');
+      _error = 'Failed to delete announcement.';
     }
 
     _isLoading = false;

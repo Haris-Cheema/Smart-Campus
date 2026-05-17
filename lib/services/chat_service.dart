@@ -9,7 +9,8 @@ class ChatService {
       'responses': [
         'Hello! Welcome to NTU NavBot. How can I help you today?',
         'Hi there! Need help navigating the campus?',
-        'Hey! I\'m your NTU campus assistant. What do you need?',
+        'Hey! I\'m your NTU campus assistant. What do you need?'
+        'Walaikum assalam! How can I help you today?',
       ],
     },
     {
