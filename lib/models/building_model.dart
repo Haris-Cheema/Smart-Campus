@@ -4,7 +4,7 @@ class BuildingModel {
   final String name;
   final LatLng location;
   final String? description;
-  final String? category; // 'academic', 'admin', 'sports', 'hostel', 'other'
+  final String? category;
 
   const BuildingModel({
     required this.name,

@@ -2,7 +2,7 @@ class AnnouncementModel {
   final String id;
   final String title;
   final String description;
-  final String status; // 'active', 'resolved', 'urgent'
+  final String status;
   final DateTime createdAt;
   final DateTime? updatedAt;
 

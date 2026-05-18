@@ -45,7 +45,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
     final theme = Theme.of(context);
     final chat = context.watch<ChatProvider>();
 
-    // Auto-scroll when new messages arrive
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -55,7 +54,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
     return SafeArea(
       child: Column(
         children: [
-          // Header
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -74,7 +72,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('NTU NavBot', style: theme.textTheme.displaySmall),
-                      Text(chat.isTyping ? 'Typing...' : 'Online', style: theme.textTheme.labelSmall),
+                      Text(
+                        chat.isTyping ? 'Typing...' : 'Online',
+                        style: theme.textTheme.labelSmall,
+                      ),
                     ],
                   ),
                 ),
@@ -85,9 +86,14 @@ class _AssistantScreenState extends State<AssistantScreen> {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         title: const Text('Clear Chat'),
-                        content: const Text('Are you sure you want to clear all messages?'),
+                        content: const Text(
+                          'Are you sure you want to clear all messages?',
+                        ),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
                           TextButton(
                             onPressed: () {
                               context.read<ChatProvider>().clearChat();
@@ -105,7 +111,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
           ),
           const Divider(height: 1),
 
-          // Messages
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -117,10 +122,15 @@ class _AssistantScreenState extends State<AssistantScreen> {
                     alignment: Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(20).copyWith(bottomLeft: Radius.zero),
+                        borderRadius: BorderRadius.circular(
+                          20,
+                        ).copyWith(bottomLeft: Radius.zero),
                       ),
                       child: const SizedBox(
                         width: 40,
@@ -139,22 +149,37 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
                 final msg = chat.messages[index];
                 return Align(
-                  alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: msg.isUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.78,
+                    ),
                     decoration: BoxDecoration(
-                      color: msg.isUser ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest,
+                      color: msg.isUser
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(20).copyWith(
-                        bottomRight: msg.isUser ? Radius.zero : const Radius.circular(20),
-                        bottomLeft: msg.isUser ? const Radius.circular(20) : Radius.zero,
+                        bottomRight: msg.isUser
+                            ? Radius.zero
+                            : const Radius.circular(20),
+                        bottomLeft: msg.isUser
+                            ? const Radius.circular(20)
+                            : Radius.zero,
                       ),
                     ),
                     child: Text(
                       msg.text,
                       style: TextStyle(
-                        color: msg.isUser ? Colors.white : theme.colorScheme.onSurface,
+                        color: msg.isUser
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
                         fontSize: 15,
                         height: 1.4,
                       ),
@@ -165,12 +190,17 @@ class _AssistantScreenState extends State<AssistantScreen> {
             ),
           ),
 
-          // Input bar
           Container(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -4))],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -181,10 +211,17 @@ class _AssistantScreenState extends State<AssistantScreen> {
                     textInputAction: TextInputAction.send,
                     decoration: InputDecoration(
                       hintText: 'Ask about campus...',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
                       filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      fillColor: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -202,7 +239,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
   }
 }
 
-// Animated typing dot
 class _TypingDot extends StatefulWidget {
   final int delay;
   const _TypingDot({required this.delay});
@@ -211,14 +247,18 @@ class _TypingDot extends StatefulWidget {
   State<_TypingDot> createState() => _TypingDotState();
 }
 
-class _TypingDotState extends State<_TypingDot> with SingleTickerProviderStateMixin {
+class _TypingDotState extends State<_TypingDot>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
     _animation = Tween(begin: 0.0, end: 1.0).animate(_ctrl);
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) _ctrl.repeat(reverse: true);

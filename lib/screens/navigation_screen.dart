@@ -30,13 +30,15 @@ class _NavigationScreenState extends State<NavigationScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
-    
+
     if (permission == LocationPermission.deniedForever && mounted) {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Location Permission'),
-          content: const Text('Location permissions are permanently denied. We cannot request permissions. Please enable them in your app settings to use GPS tracking.'),
+          content: const Text(
+            'Location permissions are permanently denied. We cannot request permissions. Please enable them in your app settings to use GPS tracking.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
@@ -64,7 +66,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Route Selection Card
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Card(
@@ -182,7 +183,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                           ),
                         ],
                       ),
-                      // Distance info
+
                       if (nav.distance != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
@@ -217,7 +218,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
               ),
             ),
 
-            // Category filter chips
             SizedBox(
               height: 44,
               child: ListView(
@@ -240,35 +240,34 @@ class _NavigationScreenState extends State<NavigationScreen> {
             ),
             const SizedBox(height: 8),
 
-            // Map
             Expanded(
               child: Listener(
                 onPointerPanZoomUpdate: (event) {
-                  // Modern trackpads fire this event for two-finger scrolling
                   final camera = _mapController.camera;
                   final double degreesPerPixel =
                       360 / (256 * (1 << camera.zoom.toInt()));
                   final newLat =
-                      camera.center.latitude - (event.panDelta.dy * degreesPerPixel * 1.5);
+                      camera.center.latitude -
+                      (event.panDelta.dy * degreesPerPixel * 1.5);
                   final newLng =
-                      camera.center.longitude + (event.panDelta.dx * degreesPerPixel * 1.5);
+                      camera.center.longitude +
+                      (event.panDelta.dx * degreesPerPixel * 1.5);
                   _mapController.move(LatLng(newLat, newLng), camera.zoom);
                 },
                 onPointerSignal: (event) {
                   if (event is PointerScrollEvent) {
                     final delta = event.scrollDelta;
-                    
+
                     bool isTrackpad = event.kind == PointerDeviceKind.trackpad;
                     if (!isTrackpad && event.kind == PointerDeviceKind.mouse) {
-                      // Mouse wheel deltas are typically exactly 50, 100, 120.
-                      // Trackpads (even when fast) produce fractional/continuous deltas.
-                      if (delta.dy % 10 != 0 || delta.dy.abs() < 40 || delta.dx != 0) {
+                      if (delta.dy % 10 != 0 ||
+                          delta.dy.abs() < 40 ||
+                          delta.dx != 0) {
                         isTrackpad = true;
                       }
                     }
 
                     if (!isTrackpad) {
-                      // Zoom map (Mouse Wheel)
                       final zoomDelta = delta.dy > 0 ? -0.5 : 0.5;
                       final newZoom = (_mapController.camera.zoom + zoomDelta)
                           .clamp(16.0, 22.0);
@@ -277,12 +276,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
                         newZoom,
                       );
                     } else {
-                      // Pan map (Trackpad scroll)
                       final camera = _mapController.camera;
                       final double degreesPerPixel =
                           360 / (256 * (1 << camera.zoom.toInt()));
                       final newLat =
-                          camera.center.latitude - (delta.dy * degreesPerPixel * 1.5);
+                          camera.center.latitude -
+                          (delta.dy * degreesPerPixel * 1.5);
                       final newLng =
                           camera.center.longitude +
                           (delta.dx * degreesPerPixel * 1.5);
@@ -303,8 +302,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
                       maxZoom: 22.0,
                       cameraConstraint: CameraConstraint.containCenter(
                         bounds: LatLngBounds(
-                          const LatLng(31.4600, 73.1460), // SouthWest Campus Edge
-                          const LatLng(31.4645, 73.1505), // NorthEast Campus Edge
+                          const LatLng(31.4600, 73.1460),
+                          const LatLng(31.4645, 73.1505),
                         ),
                       ),
                       interactionOptions: const InteractionOptions(
@@ -372,17 +371,26 @@ class _NavigationScreenState extends State<NavigationScreen> {
                                         Positioned(
                                           bottom: 40 + (size / 2) - 10,
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
-                                              color: theme.colorScheme.surface.withValues(alpha: 0.9),
-                                              borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                                              color: theme.colorScheme.surface
+                                                  .withValues(alpha: 0.9),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: theme.colorScheme.primary
+                                                    .withValues(alpha: 0.3),
+                                              ),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withValues(alpha: 0.1),
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.1),
                                                   blurRadius: 4,
                                                   offset: const Offset(0, 2),
-                                                )
+                                                ),
                                               ],
                                             ),
                                             child: Text(
@@ -390,7 +398,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
                                               style: TextStyle(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
-                                                color: theme.colorScheme.onSurface,
+                                                color:
+                                                    theme.colorScheme.onSurface,
                                               ),
                                               textAlign: TextAlign.center,
                                             ),
@@ -402,7 +411,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                               );
                             }).toList(),
                           );
-                        }
+                        },
                       ),
                     ],
                   ),
@@ -419,7 +428,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
             heroTag: 'resetView',
             mini: true,
             onPressed: () {
-              // Reset to campus center and default zoom (1 level inside the 16.0 limit)
               _mapController.move(_campusCenter, 17.0);
             },
             child: const Icon(Icons.center_focus_strong),

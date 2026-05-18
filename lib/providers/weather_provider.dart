@@ -12,9 +12,9 @@ class WeatherProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Current weather getters
   double get currentTemp {
-    return (_weatherData?['current']?['temperature_2m'] as num?)?.toDouble() ?? 0;
+    return (_weatherData?['current']?['temperature_2m'] as num?)?.toDouble() ??
+        0;
   }
 
   int get currentWeatherCode {
@@ -22,17 +22,20 @@ class WeatherProvider extends ChangeNotifier {
   }
 
   double get humidity {
-    return (_weatherData?['current']?['relative_humidity_2m'] as num?)?.toDouble() ?? 0;
+    return (_weatherData?['current']?['relative_humidity_2m'] as num?)
+            ?.toDouble() ??
+        0;
   }
 
   double get windSpeed {
-    return (_weatherData?['current']?['wind_speed_10m'] as num?)?.toDouble() ?? 0;
+    return (_weatherData?['current']?['wind_speed_10m'] as num?)?.toDouble() ??
+        0;
   }
 
-  String get weatherDescription => WeatherService.weatherDescription(currentWeatherCode);
+  String get weatherDescription =>
+      WeatherService.weatherDescription(currentWeatherCode);
   String get weatherIcon => WeatherService.weatherIcon(currentWeatherCode);
 
-  // Forecast data
   List<Map<String, dynamic>> get forecast {
     final daily = _weatherData?['daily'];
     if (daily == null) return [];

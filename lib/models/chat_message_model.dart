@@ -16,8 +16,7 @@ class ChatMessageModel {
       id: json['id'] ?? '',
       text: json['text'] ?? '',
       isUser: json['isUser'] ?? true,
-      timestamp:
-          DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+      timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
     );
   }
 

@@ -1,7 +1,6 @@
-// File generated manually for Firebase configuration.
-// ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -12,7 +11,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError('iOS is not configured — run flutterfire configure for iOS support.');
+        throw UnsupportedError(
+          'iOS is not configured — run flutterfire configure for iOS support.',
+        );
       case TargetPlatform.macOS:
         throw UnsupportedError('macOS is not configured.');
       case TargetPlatform.windows:

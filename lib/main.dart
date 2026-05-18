@@ -46,10 +46,8 @@ class SmartCampusApp extends StatelessWidget {
             themeMode: themeProvider.themeMode,
             debugShowCheckedModeBanner: false,
 
-            // Initial route based on auth state
             initialRoute: auth.isLoggedIn ? '/dashboard' : '/login',
             onGenerateRoute: (settings) {
-              // If logged in and trying to access login, redirect to dashboard
               if (settings.name == '/login' && auth.isLoggedIn) {
                 return MaterialPageRoute(
                   builder: (_) => const DashboardScreen(),

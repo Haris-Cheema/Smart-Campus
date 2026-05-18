@@ -264,7 +264,6 @@ class NavigationProvider extends ChangeNotifier {
   bool _isLoadingRoute = false;
   bool get isLoadingRoute => _isLoadingRoute;
 
-  // Calculate route — returns error message or null on success
   Future<String?> calculateRoute() async {
     if (_startLocation == null || _endLocation == null) {
       return 'Please select both start and destination';
@@ -288,7 +287,6 @@ class NavigationProvider extends ChangeNotifier {
       final endLon = endBuilding.location.longitude;
       final endLat = endBuilding.location.latitude;
 
-      // Use OSRM public API for walking route
       final url = Uri.parse(
         'http://router.project-osrm.org/route/v1/foot/$startLon,$startLat;$endLon,$endLat?geometries=geojson',
       );
@@ -300,11 +298,9 @@ class NavigationProvider extends ChangeNotifier {
         if (data['routes'] != null && data['routes'].isNotEmpty) {
           final route = data['routes'][0];
 
-          // Parse distance (in meters) and duration (in seconds)
           _distance = route['distance'].toDouble();
           _estimatedTimeMinutes = route['duration'] / 60.0;
 
-          // Parse geometry points
           final geometry = route['geometry']['coordinates'] as List;
           _routePoints = geometry
               .map((point) => LatLng(point[1].toDouble(), point[0].toDouble()))
@@ -312,11 +308,10 @@ class NavigationProvider extends ChangeNotifier {
 
           _isLoadingRoute = false;
           notifyListeners();
-          return null; // success
+          return null;
         }
       }
 
-      // Fallback to straight line if API fails or returns no route
       _routePoints = [startBuilding.location, endBuilding.location];
       const Distance distanceCalc = Distance();
       _distance = distanceCalc.as(
@@ -324,7 +319,7 @@ class NavigationProvider extends ChangeNotifier {
         startBuilding.location,
         endBuilding.location,
       );
-      _estimatedTimeMinutes = (_distance! / 1.4) / 60; // walking speed ~1.4 m/s
+      _estimatedTimeMinutes = (_distance! / 1.4) / 60;
 
       _isLoadingRoute = false;
       notifyListeners();

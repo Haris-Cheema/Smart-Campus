@@ -8,7 +8,8 @@ class AnnouncementProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  List<AnnouncementModel> get announcements => List.unmodifiable(_announcements);
+  List<AnnouncementModel> get announcements =>
+      List.unmodifiable(_announcements);
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -16,7 +17,6 @@ class AnnouncementProvider extends ChangeNotifier {
     _fetchAnnouncements();
   }
 
-  // READ all
   Future<void> _fetchAnnouncements() async {
     _isLoading = true;
     notifyListeners();
@@ -29,16 +29,18 @@ class AnnouncementProvider extends ChangeNotifier {
 
       _announcements = snapshot.docs.map((doc) {
         final data = doc.data();
-        data['id'] = doc.id; // ensure ID from firestore is used
+        data['id'] = doc.id;
         return AnnouncementModel.fromJson(data);
       }).toList();
       _error = null;
     } catch (e) {
       debugPrint('Fetch announcements error: $e');
-      // On permission denied or not found, just use empty list (free plan fallback)
-      if (e.toString().contains('permission-denied') || e.toString().contains('unavailable')) {
+
+      if (e.toString().contains('permission-denied') ||
+          e.toString().contains('unavailable')) {
         _announcements = [];
-        _error = 'Could not load announcements from server. Showing local empty state.';
+        _error =
+            'Could not load announcements from server. Showing local empty state.';
       } else {
         _error = 'Failed to load announcements: $e';
       }
@@ -48,7 +50,6 @@ class AnnouncementProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // CREATE
   Future<void> addAnnouncement({
     required String title,
     required String description,
@@ -79,7 +80,6 @@ class AnnouncementProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // READ single
   AnnouncementModel? getById(String id) {
     try {
       return _announcements.firstWhere((a) => a.id == id);
@@ -88,7 +88,6 @@ class AnnouncementProvider extends ChangeNotifier {
     }
   }
 
-  // UPDATE
   Future<void> updateAnnouncement({
     required String id,
     String? title,
@@ -108,8 +107,11 @@ class AnnouncementProvider extends ChangeNotifier {
           updatedAt: DateTime.now(),
         );
 
-        await _firestore.collection('announcements').doc(id).update(updatedAnnouncement.toJson());
-        
+        await _firestore
+            .collection('announcements')
+            .doc(id)
+            .update(updatedAnnouncement.toJson());
+
         _announcements[index] = updatedAnnouncement;
         _error = null;
       } else {
@@ -124,7 +126,6 @@ class AnnouncementProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // DELETE
   Future<void> deleteAnnouncement(String id) async {
     _isLoading = true;
     notifyListeners();

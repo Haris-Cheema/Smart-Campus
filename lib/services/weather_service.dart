@@ -15,9 +15,7 @@ class WeatherService {
         '&timezone=Asia%2FKarachi&forecast_days=5',
       );
 
-      final response = await http.get(uri).timeout(
-        const Duration(seconds: 10),
-      );
+      final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;

@@ -54,13 +54,18 @@ class _LoginScreenState extends State<LoginScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Reset Password', style: GoogleFonts.lexend(fontWeight: FontWeight.w600)),
+        title: Text(
+          'Reset Password',
+          style: GoogleFonts.lexend(fontWeight: FontWeight.w600),
+        ),
         content: Form(
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Enter your email address and we will send you a link to reset your password.'),
+              const Text(
+                'Enter your email address and we will send you a link to reset your password.',
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: emailCtrl,
@@ -77,7 +82,10 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.outline)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Theme.of(context).colorScheme.outline),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -94,12 +102,18 @@ class _LoginScreenState extends State<LoginScreen> {
     if (result == true && context.mounted) {
       final auth = context.read<AuthProvider>();
       final success = await auth.resetPassword(emailCtrl.text.trim());
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? 'Password reset email sent! Check your inbox.' : (auth.error ?? 'Failed to send reset email')),
-            backgroundColor: success ? Colors.green : Theme.of(context).colorScheme.error,
+            content: Text(
+              success
+                  ? 'Password reset email sent! Check your inbox.'
+                  : (auth.error ?? 'Failed to send reset email'),
+            ),
+            backgroundColor: success
+                ? Colors.green
+                : Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -125,36 +139,54 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 60),
-                  // Logo
+
                   Center(
                     child: Container(
                       width: 88,
                       height: 88,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+                          colors: [
+                            theme.colorScheme.primary,
+                            theme.colorScheme.secondary,
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.school_rounded, size: 44, color: Colors.white),
+                      child: const Icon(
+                        Icons.school_rounded,
+                        size: 44,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 40),
-                  Text('Welcome Back', style: GoogleFonts.lexend(fontSize: 28, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface)),
+                  Text(
+                    'Welcome Back',
+                    style: GoogleFonts.lexend(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text('Sign in to access Smart Campus', style: theme.textTheme.bodyMedium),
+                  Text(
+                    'Sign in to access Smart Campus',
+                    style: theme.textTheme.bodyMedium,
+                  ),
                   const SizedBox(height: 40),
 
-                  // Email field
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -168,7 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Password field
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -179,13 +210,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                   ),
-                  
-                  // Forgot Password Link
+
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -201,27 +237,36 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Sign In button
                   ElevatedButton(
                     onPressed: _handleLogin,
                     child: const Text('Sign In'),
                   ),
                   const SizedBox(height: 20),
 
-                  // OR divider
                   Row(
                     children: [
-                      Expanded(child: Divider(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3))),
+                      Expanded(
+                        child: Divider(
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
+                      ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text('OR', style: theme.textTheme.labelSmall),
                       ),
-                      Expanded(child: Divider(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3))),
+                      Expanded(
+                        child: Divider(
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
 
-                  // Google Sign-In button
                   OutlinedButton.icon(
                     onPressed: () async {
                       final auth = context.read<AuthProvider>();
@@ -242,23 +287,33 @@ class _LoginScreenState extends State<LoginScreen> {
                       'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                       height: 20,
                       width: 20,
-                      errorBuilder: (_, _, _) => const Icon(Icons.g_mobiledata, size: 24),
+                      errorBuilder: (_, _, _) =>
+                          const Icon(Icons.g_mobiledata, size: 24),
                     ),
                     label: const Text('Continue with Google'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      side: BorderSide(
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.3,
+                        ),
+                      ),
                       foregroundColor: theme.colorScheme.onSurface,
-                      textStyle: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.w500),
+                      textStyle: GoogleFonts.lexend(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // Register link
                   Center(
                     child: TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/register'),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/register'),
                       child: RichText(
                         text: TextSpan(
                           text: "Don't have an account? ",
@@ -266,7 +321,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             TextSpan(
                               text: 'Sign Up',
-                              style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),

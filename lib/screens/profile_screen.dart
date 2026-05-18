@@ -44,7 +44,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text('Edit Profile', style: GoogleFonts.lexend(fontWeight: FontWeight.w600)),
+          title: Text(
+            'Edit Profile',
+            style: GoogleFonts.lexend(fontWeight: FontWeight.w600),
+          ),
           content: Form(
             key: formKey,
             child: SingleChildScrollView(
@@ -71,12 +74,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    initialValue: departments.contains(selectedDept) ? selectedDept : departments.first,
+                    initialValue: departments.contains(selectedDept)
+                        ? selectedDept
+                        : departments.first,
                     decoration: const InputDecoration(
                       labelText: 'Department',
                       prefixIcon: Icon(Icons.school_outlined),
                     ),
-                    items: departments.map((d) => DropdownMenuItem(value: d, child: Text(d, style: const TextStyle(fontSize: 14)))).toList(),
+                    items: departments
+                        .map(
+                          (d) => DropdownMenuItem(
+                            value: d,
+                            child: Text(
+                              d,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (val) {
                       if (val != null) {
                         setDialogState(() => selectedDept = val);
@@ -90,7 +105,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.outline)),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Theme.of(context).colorScheme.outline),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -114,8 +132,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? 'Profile updated successfully!' : 'Failed to update profile'),
-            backgroundColor: success ? Colors.green : Theme.of(context).colorScheme.error,
+            content: Text(
+              success
+                  ? 'Profile updated successfully!'
+                  : 'Failed to update profile',
+            ),
+            backgroundColor: success
+                ? Colors.green
+                : Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -138,7 +162,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(success ? 'Profile picture updated!' : 'Failed to update picture'),
+              content: Text(
+                success
+                    ? 'Profile picture updated!'
+                    : 'Failed to update picture',
+              ),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -146,9 +174,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
       }
     }
   }
@@ -157,13 +185,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Log Out', style: GoogleFonts.lexend(fontWeight: FontWeight.w600)),
-        content: const Text('Are you sure you want to log out of your account?'),
+        title: Text(
+          'Log Out',
+          style: GoogleFonts.lexend(fontWeight: FontWeight.w600),
+        ),
+        content: const Text(
+          'Are you sure you want to log out of your account?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
             child: const Text('Log Out'),
           ),
         ],
@@ -191,7 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.all(20),
           children: [
             const SizedBox(height: 20),
-            // Avatar
+
             Center(
               child: Stack(
                 children: [
@@ -199,29 +237,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2), width: 2),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        width: 2,
+                      ),
                     ),
                     child: InkWell(
                       onTap: _showEditDialog,
                       customBorder: const CircleBorder(),
                       child: CircleAvatar(
                         radius: 60,
-                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        backgroundImage: user?.avatarUrl != null && user!.avatarUrl.isNotEmpty
-                          ? (user.avatarUrl.startsWith('http')
-                              ? NetworkImage(user.avatarUrl)
-                              : FileImage(File(user.avatarUrl)) as ImageProvider)
-                          : null,
-                      child: user?.avatarUrl == null || user!.avatarUrl.isEmpty
-                          ? Text(
-                              _initials(user?.name ?? 'S'),
-                              style: GoogleFonts.lexend(
-                                fontSize: 40,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.primary,
-                              ),
-                            )
-                          : null,
+                        backgroundColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.1,
+                        ),
+                        backgroundImage:
+                            user?.avatarUrl != null &&
+                                user!.avatarUrl.isNotEmpty
+                            ? (user.avatarUrl.startsWith('http')
+                                  ? NetworkImage(user.avatarUrl)
+                                  : FileImage(File(user.avatarUrl))
+                                        as ImageProvider)
+                            : null,
+                        child:
+                            user?.avatarUrl == null || user!.avatarUrl.isEmpty
+                            ? Text(
+                                _initials(user?.name ?? 'S'),
+                                style: GoogleFonts.lexend(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              )
+                            : null,
                       ),
                     ),
                   ),
@@ -243,7 +290,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.camera_alt_rounded, size: 20, color: Colors.white),
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -256,18 +307,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Text(
                     user?.name ?? 'Student',
-                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       user?.department ?? 'Computer Science',
-                      style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSecondaryContainer),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -282,22 +340,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.badge_outlined, size: 16, color: theme.colorScheme.outline),
+                            Icon(
+                              Icons.badge_outlined,
+                              size: 16,
+                              color: theme.colorScheme.outline,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               user?.studentId ?? 'N/A',
-                              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.outline,
+                              ),
                             ),
                           ],
                         ),
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.mail_outline_rounded, size: 16, color: theme.colorScheme.outline),
+                            Icon(
+                              Icons.mail_outline_rounded,
+                              size: 16,
+                              color: theme.colorScheme.outline,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               user?.email ?? 'N/A',
-                              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.outline,
+                              ),
                             ),
                           ],
                         ),
@@ -309,7 +379,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 40),
 
-            _ProfileTile(icon: Icons.edit, title: 'Edit Profile', onTap: _showEditDialog),
+            _ProfileTile(
+              icon: Icons.edit,
+              title: 'Edit Profile',
+              onTap: _showEditDialog,
+            ),
             Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: SwitchListTile(
@@ -320,7 +394,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    context.watch<ThemeProvider>().isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    context.watch<ThemeProvider>().isDarkMode
+                        ? Icons.dark_mode
+                        : Icons.light_mode,
                     color: theme.colorScheme.primary,
                   ),
                 ),
@@ -329,17 +405,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onChanged: (_) => context.read<ThemeProvider>().toggleTheme(),
               ),
             ),
-            _ProfileTile(icon: Icons.campaign, title: 'Announcements', onTap: () => Navigator.pushNamed(context, '/announcements')),
-            _ProfileTile(icon: Icons.wb_sunny, title: 'Weather', onTap: () => Navigator.pushNamed(context, '/weather')),
-            _ProfileTile(icon: Icons.info_outline, title: 'About App', onTap: () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'Smart Campus',
-                applicationVersion: '1.0.0',
-                applicationIcon: Icon(Icons.school, color: theme.colorScheme.primary, size: 40),
-                children: [const Text('NTU Faisalabad Smart Campus Navigation & Assistant App.')],
-              );
-            }),
+            _ProfileTile(
+              icon: Icons.campaign,
+              title: 'Announcements',
+              onTap: () => Navigator.pushNamed(context, '/announcements'),
+            ),
+            _ProfileTile(
+              icon: Icons.wb_sunny,
+              title: 'Weather',
+              onTap: () => Navigator.pushNamed(context, '/weather'),
+            ),
+            _ProfileTile(
+              icon: Icons.info_outline,
+              title: 'About App',
+              onTap: () {
+                showAboutDialog(
+                  context: context,
+                  applicationName: 'Smart Campus',
+                  applicationVersion: '1.0.0',
+                  applicationIcon: Icon(
+                    Icons.school,
+                    color: theme.colorScheme.primary,
+                    size: 40,
+                  ),
+                  children: [
+                    const Text(
+                      'NTU Faisalabad Smart Campus Navigation & Assistant App.',
+                    ),
+                  ],
+                );
+              },
+            ),
 
             const SizedBox(height: 32),
             ElevatedButton.icon(
@@ -368,7 +464,11 @@ class _ProfileTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
-  const _ProfileTile({required this.icon, required this.title, required this.onTap});
+  const _ProfileTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {

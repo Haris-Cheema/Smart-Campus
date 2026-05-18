@@ -24,14 +24,15 @@ class BuildingDetailScreen extends StatelessWidget {
       appBar: AppBar(title: Text(building.name)),
       body: ListView(
         children: [
-          // Mini Map
           SizedBox(
             height: 220,
             child: FlutterMap(
               options: MapOptions(
                 initialCenter: building.location,
                 initialZoom: 18,
-                interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.none,
+                ),
               ),
               children: [
                 TileLayer(
@@ -48,7 +49,11 @@ class BuildingDetailScreen extends StatelessWidget {
                       point: building.location,
                       width: 48,
                       height: 48,
-                      child: Icon(Icons.location_on, color: theme.colorScheme.primary, size: 48),
+                      child: Icon(
+                        Icons.location_on,
+                        color: theme.colorScheme.primary,
+                        size: 48,
+                      ),
                     ),
                   ],
                 ),
@@ -61,12 +66,16 @@ class BuildingDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Category chip
                 if (building.category != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: _categoryColor(building.category!).withValues(alpha: 0.1),
+                      color: _categoryColor(
+                        building.category!,
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: Text(
@@ -88,22 +97,28 @@ class BuildingDetailScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                 ],
 
-                // Coordinates
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        _DetailRow(icon: Icons.location_on, label: 'Latitude', value: building.location.latitude.toStringAsFixed(6)),
+                        _DetailRow(
+                          icon: Icons.location_on,
+                          label: 'Latitude',
+                          value: building.location.latitude.toStringAsFixed(6),
+                        ),
                         const Divider(),
-                        _DetailRow(icon: Icons.location_on, label: 'Longitude', value: building.location.longitude.toStringAsFixed(6)),
+                        _DetailRow(
+                          icon: Icons.location_on,
+                          label: 'Longitude',
+                          value: building.location.longitude.toStringAsFixed(6),
+                        ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
 
-                // Navigate button
                 ElevatedButton.icon(
                   onPressed: () {
                     nav.setEnd(building.name);
@@ -140,7 +155,11 @@ class _DetailRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _DetailRow({required this.icon, required this.label, required this.value});
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {

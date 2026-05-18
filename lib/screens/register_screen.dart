@@ -77,9 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       isLoading: auth.isLoading,
       message: 'Creating account...',
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Create Account'),
-        ),
+        appBar: AppBar(title: const Text('Create Account')),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -89,12 +87,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 24),
-                  Text('Join Smart Campus', style: GoogleFonts.lexend(fontSize: 24, fontWeight: FontWeight.w700)),
+                  Text(
+                    'Join Smart Campus',
+                    style: GoogleFonts.lexend(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text('Fill in your details to get started', style: theme.textTheme.bodyMedium),
+                  Text(
+                    'Fill in your details to get started',
+                    style: theme.textTheme.bodyMedium,
+                  ),
                   const SizedBox(height: 32),
 
-                  // Name
                   TextFormField(
                     controller: _nameController,
                     validator: AuthProvider.validateName,
@@ -105,7 +111,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Email
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -118,7 +123,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Student ID
                   TextFormField(
                     controller: _studentIdController,
                     validator: AuthProvider.validateStudentId,
@@ -130,19 +134,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Department dropdown
                   DropdownButtonFormField<String>(
                     initialValue: _selectedDepartment,
                     decoration: const InputDecoration(
                       labelText: 'Department',
                       prefixIcon: Icon(Icons.school_outlined),
                     ),
-                    items: _departments.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
-                    onChanged: (val) => setState(() => _selectedDepartment = val!),
+                    items: _departments
+                        .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                        .toList(),
+                    onChanged: (val) =>
+                        setState(() => _selectedDepartment = val!),
                   ),
                   const SizedBox(height: 16),
 
-                  // Password
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -151,20 +156,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // Confirm Password
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: true,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Please confirm your password';
-                      if (value != _passwordController.text) return 'Passwords do not match';
+                      if (value == null || value.isEmpty)
+                        return 'Please confirm your password';
+                      if (value != _passwordController.text)
+                        return 'Passwords do not match';
                       return null;
                     },
                     decoration: const InputDecoration(
@@ -174,27 +186,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Register button
                   ElevatedButton(
                     onPressed: _handleRegister,
                     child: const Text('Create Account'),
                   ),
                   const SizedBox(height: 20),
 
-                  // OR divider
                   Row(
                     children: [
-                      Expanded(child: Divider(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3))),
+                      Expanded(
+                        child: Divider(
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
+                      ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text('OR', style: theme.textTheme.labelSmall),
                       ),
-                      Expanded(child: Divider(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3))),
+                      Expanded(
+                        child: Divider(
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
 
-                  // Google Sign-Up button
                   OutlinedButton.icon(
                     onPressed: () async {
                       final auth = context.read<AuthProvider>();
@@ -215,20 +236,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                       height: 20,
                       width: 20,
-                      errorBuilder: (_, _, _) => const Icon(Icons.g_mobiledata, size: 24),
+                      errorBuilder: (_, _, _) =>
+                          const Icon(Icons.g_mobiledata, size: 24),
                     ),
                     label: const Text('Sign up with Google'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      side: BorderSide(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      side: BorderSide(
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.3,
+                        ),
+                      ),
                       foregroundColor: theme.colorScheme.onSurface,
-                      textStyle: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.w500),
+                      textStyle: GoogleFonts.lexend(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // Already have account
                   Center(
                     child: TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -239,7 +269,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           children: [
                             TextSpan(
                               text: 'Sign In',
-                              style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
