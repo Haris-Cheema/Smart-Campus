@@ -1,0 +1,44 @@
+name: smart_campus
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  cloud_firestore: ^6.3.0
+  firebase_auth: ^6.4.0
+  firebase_core: ^4.7.0
+  firebase_storage: ^13.3.0
+  flutter:
+    sdk: flutter
+  flutter_map: ^8.3.0
+  flutter_map_location_marker: ^10.2.0
+  geolocator: ^14.0.2
+  google_fonts: ^8.1.0
+  google_sign_in: ^7.2.0
+  http: ^1.6.0
+  image_picker: ^1.2.2
+  intl: ^0.20.2
+  latlong2: ^0.9.1
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.5
+  url_launcher: ^6.3.2
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.3
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.7
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon.png"
+  min_sdk_android: 21
+
+
+flutter:
+  uses-material-design: true
